@@ -50,11 +50,13 @@ const rl = readline.createInterface({
 // 1. Read the incoming local index data from standard input (stdin) line by line.
 let localIndex = '';
 rl.on('line', (line) => {
+  localIndex += line + '\n';
 });
 
 rl.on('close', () => {
   // 2. Read the global index name/location, using process.argv
   // and call printMerged as a callback
+  fs.readFile(process.argv[2], 'utf8', printMerged);
 });
 
 const printMerged = (err, data) => {
@@ -75,12 +77,21 @@ const printMerged = (err, data) => {
 
   // 3. For each line in `localIndexLines`, parse them and add them to the `local` object where keys are terms and values contain `url` and `freq`.
   for (const line of localIndexLines) {
+    const [term, freq, url] = line.split(' | ');
     local[term] = {url, freq};
   }
 
   // 4. For each line in `globalIndexLines`, parse them and add them to the `global` object where keys are terms and values are arrays of `url` and `freq` objects.
   // Use the .trim() method to remove leading and trailing whitespace from a string.
   for (const line of globalIndexLines) {
+    const [term, other] = line.split(' | ');
+    const pairs = other.split(' ');
+
+    const urlfs = [];
+    for (let i = 0; i < pairs.length; i += 2) {
+      urlfs.push({url: pairs[i], freq: pairs[i + 1]});
+    }
+
     global[term] = urlfs; // Array of {url, freq} objects
   }
 
@@ -90,6 +101,19 @@ const printMerged = (err, data) => {
   //     - Sort the array by `freq` in descending order.
   // - If the term does not exist in the global index:
   //     - Add it as a new entry with the local index's data.
+
+  for (const [term, urlf] of Object.entries(local)) {
+    if (term in global) {
+      global[term].push(urlf);
+      global[term].sort(compare);
+    } else {
+      global[term] = [urlf];
+    }
+  }
+
   // 6. Print the merged index to the console in the same format as the global index file:
   //    - Each line contains a term, followed by a pipe (`|`), followed by space-separated pairs of `url` and `freq`.
+  for (const [term, urlf] of Object.entries(global)) {
+    console.log(`${term} | ${urlf.map((el) => `${el.url} ${el.freq}`).join(' ')}`);
+  }
 };
