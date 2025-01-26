@@ -11,7 +11,7 @@ DIFF_PERCENT=${DIFF_PERCENT:-0}
 
 cat /dev/null > d/global-index.txt
 
-files=("$T_FOLDER"/d/s_merge_{1..2}.txt)
+files=("$T_FOLDER"/d/s_merge_{1..3}.txt)
 
 for file in "${files[@]}"
 do

@@ -37,5 +37,5 @@ rl.on('close', () => {
   //  - extract the value of the `href` attribute for each anchor element.
   // 5. Print each absolute URL to the console, one per line.
   parsedHTML.window.document.querySelectorAll('a[href]')
-      .forEach((anchor) => console.log(new URL(baseURL + anchor.getAttribute('href')).toString()));
+      .forEach((anchor) => console.log(new URL(anchor.getAttribute('href'), baseURL).toString()));
 });

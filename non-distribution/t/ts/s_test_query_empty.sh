@@ -8,12 +8,12 @@ cd "$(dirname "$0")/../..$R_FOLDER" || exit 1
 
 DIFF=${DIFF:-diff}
 
-term="aaron"
+term="a"
 
-cat "$T_FOLDER"/d/s_query.txt > d/global-index.txt
+cat "$T_FOLDER"/d/s_query_empty.txt > d/global-index.txt
 
 
-if $DIFF <(./query.js "$term") <(cat "$T_FOLDER"/d/s_query_result.txt) >&2;
+if $DIFF <(./query.js "$term") <(cat "$T_FOLDER"/d/s_query_empty_result.txt) >&2;
 then
     echo "$0 success: search results are identical"
     exit 0
