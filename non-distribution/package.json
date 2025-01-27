@@ -2,9 +2,9 @@
   "name": "cs1380:m0",
   "version": "1.0.0",
   "author": {
-    "name": "<first last?>",
-    "email": "<email@brown.edu?>",
-    "cslogin": "<cslogin?>"
+    "name": "Artem Agvanian",
+    "email": "artem_agvanian@brown.edu",
+    "cslogin": "aagvania"
   },
   "description": "A set of components for cs1380's search engine.",
   "dependencies": {
@@ -24,18 +24,18 @@
     "jest": "^29.7.0"
   },
   "report": {
-    "hours": 999,
-    "loc": 999,
+    "hours": 5,
+    "loc": 130,
     "dev": {
-      "cpu-no": 999,
-      "mem-gb": 999,
-      "ssd-gb": 999
+      "cpu-no": 10,
+      "mem-gb": 16,
+      "ssd-gb": 1024
     },
     "throughput": {
-      "dev": [],
-      "aws": [],
+      "dev": [2.229, 2.544, 3.419],
+      "aws": [1.283, 0.777, 2.241],
       "gs": []
     },
-    "dloc": -99
+    "dloc": 5000
   }
 }

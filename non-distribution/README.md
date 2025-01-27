@@ -42,3 +42,31 @@ The code inside `non-distribution` is organized as follows:
 
 To submit your solution, run `./scripts/submit.sh` from the root of the stencil. This will create a
 `submission.zip` file which you can upload to the autograder.
+
+# M0: Setup & Centralized Computing
+
+> Add your contact information below and in `package.json`.
+
+* name: `Artem Agvanian`
+* email: `artem_agvanian@brown.edu`
+* cslogin: `aagvania`
+
+## Summary
+
+> Summarize your implementation, including the most challenging aspects; remember to update the `report` section of the `package.json` file with the total number of hours it took you to complete M0 (`hours`), the total number of JavaScript lines you added, including tests (`jsloc`), the total number of shell lines you added, including for deployment and testing (`sloc`).
+
+My implementation consists of `5` components addressing T1--8. The most challenging aspect was developing a bash script because of my unfamiliarity with it.
+
+## Correctness & Performance Characterization
+
+> Describe how you characterized the correctness and performance of your implementation.
+
+To characterize correctness, we developed `8` tests that test the following cases: empty inputs, repeated inputs.
+
+*Performance*: The throughput of various subsystems is described in the `"throughput"` portion of package.json. The characteristics of my development machines are summarized in the `"dev"` portion of package.json.
+
+## Wild Guess
+
+> How many lines of code do you think it will take to build the fully distributed, scalable version of your search engine? Add that number to the `"dloc"` portion of package.json, and justify your answer below.
+
+I believe the final implementation will span ~5k LoC. It is hard to provide a meaningful justification, but I think this is the case given expected complexity of the project.
