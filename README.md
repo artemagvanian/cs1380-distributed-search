@@ -78,4 +78,21 @@ distribution.all.comm.send(['sid'], {node: node, service: 'status', method: 'get
 
 # Results and Reflections
 
-> ...
+# M1: Serialization / Deserialization
+
+## Summary
+
+> Summarize your implementation, including key challenges you encountered. Remember to update the `report` section of the `package.json` file with the total number of hours it took you to complete each task of M1 (`hours`) and the lines of code per task.
+
+My implementation comprises `2` software components, totaling `118` lines of code. Key challenges included:
+- Serializing escaped characters, solved using JSON serialization module.
+- Serializing arrow functions and anonymous functions, solved using IIFEs.
+
+## Correctness & Performance Characterization
+
+
+> Describe how you characterized the correctness and performance of your implementation
+
+*Correctness*: I wrote `5` tests; these tests take `2s` to execute. This includes objects with escaped characters, functions, empty objects.
+
+*Performance*: The latency of various subsystems is described in the `"latency"` portion of package.json (in µs/op, simple object serialization, function object serialization, complex object serialization). The characteristics of my development machines are summarized in the `"dev"` portion of package.json.
