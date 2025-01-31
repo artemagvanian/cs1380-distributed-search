@@ -16,7 +16,7 @@ test('(3 pts) (scenario) object fix', () => {
            results in the expected string. */
   const object = {a: 'jcarb', b: 1, c: (a, b) => a + b};
   // eslint-disable-next-line
-    const serializedObject = '{"type":"object","value":{"a":"{\\"type\\":\\"string\\",\\"value\\":\\"jcarb\\"}","b":"{\\"type\\":\\"number\\",\\"value\\":\\"1\\"}","c":"{\\"type\\":\\"function\\",\\"value\\":\\"(a, b) => a + b\\"}"}}';
+  const serializedObject = '{"type":"object","value":{"a":"{\\"type\\":\\"string\\",\\"value\\":\\"jcarb\\"}","b":"{\\"type\\":\\"number\\",\\"value\\":\\"1\\"}","c":"{\\"type\\":\\"function\\",\\"value\\":\\"(a, b) => a + b\\"}"}}';
   expect(util.serialize(object)).toBe(serializedObject);
 });
 
@@ -25,7 +25,6 @@ test('(3 pts) (scenario) string deserialized into target object', () => {
           Come up with a string that when deserialized, results in the following object:
           {a: 1, b: "two", c: false}
       */
-
   const string = '{"type":"object","value":{"a":{"type":"number","value": "1"}, "b":{"type":"string","value": "two"},"c":{"type":"boolean","value": "false"}}}';
   const object = {a: 1, b: 'two', c: false};
   const deserialized = util.deserialize(string);

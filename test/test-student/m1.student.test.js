@@ -7,30 +7,49 @@
 */
 
 const distribution = require('../../config.js');
+const util = distribution.util;
 
 test('(1 pts) student test', () => {
-  // Fill out this test case...
-    throw new Error('Not implemented');
+  const hof = function() {
+    // eslint-disable-next-line
+    return (a, b) => a + b + 'foo' + "foo";
+  };
+  const serialized = util.serialize(hof);
+  const deserialized = util.deserialize(serialized);
+  expect(deserialized()('a', 'b')).toEqual('abfoofoo');
 });
 
 
 test('(1 pts) student test', () => {
-  // Fill out this test case...
-    throw new Error('Not implemented');
+  const arrayOfArrays = [
+    [1, 2, 3],
+    ['a', 'b', 'c'],
+  ];
+  const serialized = util.serialize(arrayOfArrays);
+  const deserialized = util.deserialize(serialized);
+  expect(deserialized).toEqual(arrayOfArrays);
 });
 
 
 test('(1 pts) student test', () => {
-  // Fill out this test case...
-    throw new Error('Not implemented');
+  const objectOfObjects = {
+    a: {a: 5, b: 6},
+  };
+  const serialized = util.serialize(objectOfObjects);
+  const deserialized = util.deserialize(serialized);
+  expect(deserialized).toEqual(objectOfObjects);
 });
 
 test('(1 pts) student test', () => {
-  // Fill out this test case...
-    throw new Error('Not implemented');
+  const emptyObject = {};
+  const serialized = util.serialize(emptyObject);
+  const deserialized = util.deserialize(serialized);
+  expect(deserialized).toEqual(emptyObject);
 });
 
 test('(1 pts) student test', () => {
-  // Fill out this test case...
-    throw new Error('Not implemented');
+  const emptyArray = [];
+  const serialized = util.serialize(emptyArray);
+  const deserialized = util.deserialize(serialized);
+  expect(deserialized).toEqual(emptyArray);
 });
