@@ -1,5 +1,5 @@
 const id = require('../util/id');
-const log = require('../util/log');
+const orDefault = require('../util/orDefault');
 
 const status = {};
 
@@ -10,9 +10,35 @@ global.moreStatus = {
 };
 
 status.get = function(configuration, callback) {
-  callback = callback || function() { };
+  configuration = orDefault.configurationOrDefault(configuration);
+  callback = orDefault.callbackOrDefault(callback);
+  switch (configuration) {
+    case 'nid':
+      callback(null, global.moreStatus.nid);
+      break;
+    case 'sid':
+      callback(null, global.moreStatus.sid);
+      break;
+    case 'ip':
+      callback(null, global.nodeConfig.ip);
+      break;
+    case 'port':
+      callback(null, global.nodeConfig.port);
+      break;
+    case 'counts':
+      callback(null, global.moreStatus.counts);
+      break;
+    case 'heapTotal':
+      callback(null, process.memoryUsage().heapTotal);
+      break;
+    case 'heapUsed':
+      callback(null, process.memoryUsage().heapUsed);
+      break;
+    default:
+      callback(new Error(`bad configuration: ${configuration}`));
+      break;
+  }
 };
-
 
 status.spawn = function(configuration, callback) {
 };

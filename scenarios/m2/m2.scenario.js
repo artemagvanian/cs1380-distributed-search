@@ -1,4 +1,5 @@
 const distribution = require('../../config.js');
+const util = distribution.util;
 
 test('(2 pts) (scenario) simple callback practice', () => {
   /* Collect the result of 3 callback services in list  */
@@ -13,36 +14,38 @@ test('(2 pts) (scenario) simple callback practice', () => {
     results.push(result);
   }
 
-  // ...
+  add(1, 2, storeResults);
+  add(2, 3, storeResults);
+  add(3, 4, storeResults);
 
   expect(results).toEqual([3, 5, 7]);
 });
 
 test('(2 pts) (scenario) collect errors and successful results', (done) => {
   /*
-          Call each delivery service in a loop, and collect the sucessful results and
-          failures in an array.
-      */
+    Call each delivery service in a loop, and collect the sucessful results and
+    failures in an array.
+  */
 
   // Sample service
   const appleDeliveryService = (callback) => {
-    // ...
+    callback(null, 'good apples');
   };
 
   const pineappleDeliveryService = (callback) => {
-    // ...
+    callback(new Error('bad pineapples'));
   };
 
   const bananaDeliveryService = (callback) => {
-    // ...
+    callback(null, 'good bananas');
   };
 
   const peachDeliveryService = (callback) => {
-    // ...
+    callback(null, 'good peaches');
   };
 
   const mangoDeliveryService = (callback) => {
-    // ...
+    callback(new Error('bad mangoes'));
   };
 
   const services = [
@@ -89,13 +92,13 @@ test('(2 pts) (scenario) collect errors and successful results', (done) => {
 
 test('(5 pts) (scenario) use rpc', (done) => {
   let n = 0;
-  let addOne = () => {
+  const addOne = () => {
     return ++n;
   };
 
   const node = {ip: '127.0.0.1', port: 9009};
 
-  let addOneRPC = '?';
+  const addOneRPC = util.wire.createRPC(util.wire.toAsync(addOne));
 
   const rpcService = {
     addOne: addOneRPC,
