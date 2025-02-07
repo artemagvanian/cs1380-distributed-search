@@ -90,9 +90,29 @@ My implementation comprises `2` software components, totaling `118` lines of cod
 
 ## Correctness & Performance Characterization
 
-
 > Describe how you characterized the correctness and performance of your implementation
 
 *Correctness*: I wrote `5` tests; these tests take `2s` to execute. This includes objects with escaped characters, functions, empty objects.
 
 *Performance*: The latency of various subsystems is described in the `"latency"` portion of package.json (in µs/op, simple object serialization, function object serialization, complex object serialization). The characteristics of my development machines are summarized in the `"dev"` portion of package.json.
+
+# M2: Actors and Remote Procedure Calls (RPC)
+
+## Summary
+
+> Summarize your implementation, including key challenges you encountered. Remember to update the `report` section of the `package.json` file with the total number of hours it took you to complete each task of M2 (`hours`) and the lines of code per task.
+
+My implementation comprises `4` software components, totaling `118` lines of code. Key challenges included understanding the naming and calling convention, which I solved by reading the handout carefully.
+
+## Correctness & Performance Characterization
+
+> Describe how you characterized the correctness and performance of your implementation
+
+*Correctness*: I wrote `5` tests; these tests take ~6s to execute.
+
+*Performance*: I characterized the performance of comm and RPC by sending 1000 service requests in a tight loop. Average throughput and latency is recorded in `package.json` (in µs/op, comm performance, RPC performance).
+
+## Key Feature
+
+> How would you explain the implementation of `createRPC` to someone who has no background in computer science — i.e., with the minimum jargon possible?
+Imagine a situation where you are opening a post office and need to give a set of instructions to all other post offices about how to send correspondence to you. `createRPC` metaphorically generates these instructions; if you send the instructions to another post office, a third post office could reach that post office and ask it to forward the correspondence to you.  
