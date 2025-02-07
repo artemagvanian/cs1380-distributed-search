@@ -52,6 +52,8 @@ const start = function(callback) {
       Then, you need to serialize the result and send it back to the caller.
       */
 
+      global.moreStatus.counts++;
+
       let args;
       try {
         args = deserialize(body);
@@ -74,7 +76,7 @@ const start = function(callback) {
             service[method](...args, (e, v) => {
               try {
                 const serializedResult = serialize([e, v]);
-                res.writeHead(200).end(serializedResult);
+                res.writeHead(e == null ? 200 : 400).end(serializedResult);
               } catch (e) {
                 const serializedError = serialize([e, undefined]);
                 res.writeHead(400).end(serializedError);
