@@ -40,10 +40,8 @@ status.get = function(configuration, callback) {
   }
 };
 
-status.spawn = function(configuration, callback) {
-};
+status.spawn = require('@brown-ds/distribution').local.status.spawn;
 
-status.stop = function(callback) {
-};
+status.stop = require('@brown-ds/distribution').local.status.stop;
 
 module.exports = status;
