@@ -21,7 +21,7 @@ const {serialize, deserialize} = require('../util/serialization');
  * @return {void}
  */
 function send(message, remote, callback) {
-  message = orDefault.messageOrDefault(message);
+  message = orDefault.arrayOrDefault(message);
   callback = orDefault.callbackOrDefault(callback);
 
   let data;
@@ -32,10 +32,11 @@ function send(message, remote, callback) {
     return;
   }
 
+  const group = remote.gid ? remote.gid : 'local';
   const options = {
     hostname: remote.node.ip,
     port: remote.node.port,
-    path: `/local/${remote.service}/${remote.method}`,
+    path: `/${group}/${remote.service}/${remote.method}`,
     method: 'PUT',
     headers: {
       'Content-Length': Buffer.byteLength(data),

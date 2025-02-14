@@ -23,7 +23,7 @@ const start = function(callback) {
       The url will have the form: http://node_ip:node_port/service/method
     */
 
-    const [service, method] = req.url.split('/').slice(2);
+    const [gid, service, method] = req.url.split('/').slice(1);
 
     /*
 
@@ -62,7 +62,7 @@ const start = function(callback) {
         res.writeHead(400).end(serializedError);
       }
 
-      routes.get(service, (routesError, service) => {
+      routes.get({service, gid}, (routesError, service) => {
         if (routesError) {
           try {
             const serializedError = serialize([routesError, undefined]);

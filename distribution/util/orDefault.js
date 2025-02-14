@@ -1,14 +1,14 @@
-function serviceOrDefault(maybeService) {
-  if (typeof maybeService == 'object' && maybeService !== null) {
-    return maybeService;
+function objectOrDefault(maybeObject) {
+  if (typeof maybeObject == 'object' && maybeObject !== null) {
+    return maybeObject;
   } else {
     return {};
   }
 }
 
-function configurationOrDefault(maybeConfiguration) {
-  if (typeof maybeConfiguration == 'string') {
-    return maybeConfiguration;
+function stringOrDefault(maybeString) {
+  if (typeof maybeString == 'string') {
+    return maybeString;
   } else {
     return '';
   }
@@ -22,9 +22,9 @@ function callbackOrDefault(maybeCallback) {
   }
 }
 
-function messageOrDefault(maybeMessage) {
-  if (maybeMessage instanceof Array) {
-    return maybeMessage;
+function arrayOrDefault(maybeArray) {
+  if (maybeArray instanceof Array) {
+    return maybeArray;
   } else {
     return [];
   }
@@ -32,7 +32,7 @@ function messageOrDefault(maybeMessage) {
 
 module.exports = {
   callbackOrDefault,
-  configurationOrDefault,
-  messageOrDefault,
-  serviceOrDefault,
+  stringOrDefault,
+  arrayOrDefault,
+  objectOrDefault,
 };

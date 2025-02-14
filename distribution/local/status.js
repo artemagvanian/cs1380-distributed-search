@@ -10,7 +10,7 @@ global.moreStatus = {
 };
 
 status.get = function(configuration, callback) {
-  configuration = orDefault.configurationOrDefault(configuration);
+  configuration = orDefault.stringOrDefault(configuration);
   callback = orDefault.callbackOrDefault(callback);
   switch (configuration) {
     case 'nid':
