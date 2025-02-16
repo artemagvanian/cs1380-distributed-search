@@ -58,8 +58,8 @@ function send(message, remote, callback) {
     });
   });
 
-  req.on('error', (e) => {
-    callback(e);
+  req.on('error', () => {
+    callback(new Error('failed to communicate with node'));
   });
 
   req.write(data);

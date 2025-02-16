@@ -28,14 +28,14 @@ function comm(config) {
       if (e) {
         callback(e);
       } else {
-        const nodeIds = groups.keys();
+        const nodeIds = Object.keys(groups);
 
         const values = {};
         const errors = {};
         let counter = 0;
 
         const processUntilDone = () => {
-          if (counter == nodeIds.length()) {
+          if (counter == nodeIds.length) {
             callback(errors, values);
           } else {
             const nodeId = nodeIds[counter];
@@ -45,9 +45,9 @@ function comm(config) {
                 errors[nodeId] = e;
               } else {
                 values[nodeId] = v;
-                counter++;
-                processUntilDone();
               }
+              counter++;
+              processUntilDone();
             });
           }
         };

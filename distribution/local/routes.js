@@ -12,23 +12,33 @@ const routes = {};
 function get(configuration, callback) {
   callback = orDefault.callbackOrDefault(callback);
   if (typeof configuration == 'string') {
-    if (routes[configuration]) {
-      callback(null, routes[configuration]);
+    configuration = {
+      service: configuration,
+      gid: 'local',
+    };
+  } else if (!configuration.gid) {
+    configuration = {
+      ...configuration,
+      gid: 'local',
+    };
+  }
+
+  if (configuration.gid == 'local') {
+    if (routes[configuration.service]) {
+      callback(null, routes[configuration.service]);
     } else {
-      callback(new Error(`service with name ${configuration} does not exist`));
+      callback(new Error(`service with name ${configuration.service} does not exist`));
     }
-  } else if (typeof configuration == 'object' && configuration != null) {
+  } else {
     if (global.distribution[configuration.gid]) {
       if (global.distribution[configuration.gid][configuration.service]) {
         callback(null, global.distribution[configuration.gid][configuration.service]);
       } else {
-        callback(new Error(`service with name ${configuration} does not exist`));
+        callback(new Error(`service with name ${configuration.service} does not exist`));
       }
     } else {
       callback(new Error('bad group'));
     }
-  } else {
-    callback(new Error('bad configuration'));
   }
 }
 

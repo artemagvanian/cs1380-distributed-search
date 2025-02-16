@@ -14,7 +14,9 @@ groups.get = function(name, callback) {
 };
 
 groups.put = function(config, group, callback) {
-  config = orDefault.stringOrDefault(config);
+  if (typeof config == 'object' && config != null) {
+    config = config.gid;
+  }
   group = orDefault.objectOrDefault(group);
   callback = orDefault.callbackOrDefault(callback);
   groups[config] = group;

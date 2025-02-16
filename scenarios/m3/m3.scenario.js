@@ -125,7 +125,7 @@ test('(5 pts) (scenario) use the gossip service', (done) => {
   const nExpected = 3;
 
   // Experiment with the subset function used in the gossip service...
-  const config = {gid: 'groupD', subset: (lst) => 2};
+  const config = {gid: 'groupD', subset: (lst) => 3};
 
   // Instantiated groupD
   distribution.local.groups.put(config, groupD, (e, v) => {

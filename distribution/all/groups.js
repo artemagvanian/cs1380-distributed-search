@@ -7,166 +7,46 @@ const groups = function(config) {
   return {
     put: (config, group, callback) => {
       callback = orDefault.callbackOrDefault(callback);
-      global.distribution.local.groups.get(context.gid, (e, groups) => {
-        if (e) {
-          callback(e);
-        } else {
-          const nodeIds = groups.keys();
-
-          const values = {};
-          const errors = {};
-          let counter = 0;
-
-          const processUntilDone = () => {
-            if (counter == nodeIds.length()) {
-              callback(errors, values);
-            } else {
-              const nodeId = nodeIds[counter];
-              global.distribution.local.groups.put(config, group, (e, v) => {
-                if (e) {
-                  errors[nodeId] = e;
-                } else {
-                  values[nodeId] = v;
-                  counter++;
-                  processUntilDone();
-                }
-              });
-            }
-          };
-          processUntilDone();
-        }
+      const message = [config, group];
+      const remote = {service: 'groups', method: 'put'};
+      global.distribution[context.gid].comm.send(message, remote, (e, v) => {
+        callback(e, v);
       });
     },
 
     del: (name, callback) => {
       callback = orDefault.callbackOrDefault(callback);
-      global.distribution.local.groups.get(context.gid, (e, groups) => {
-        if (e) {
-          callback(e);
-        } else {
-          const nodeIds = groups.keys();
-
-          const values = {};
-          const errors = {};
-          let counter = 0;
-
-          const processUntilDone = () => {
-            if (counter == nodeIds.length()) {
-              callback(errors, values);
-            } else {
-              const nodeId = nodeIds[counter];
-              global.distribution.local.groups.del(name, (e, v) => {
-                if (e) {
-                  errors[nodeId] = e;
-                } else {
-                  values[nodeId] = v;
-                  counter++;
-                  processUntilDone();
-                }
-              });
-            }
-          };
-          processUntilDone();
-        }
+      const message = [name];
+      const remote = {service: 'groups', method: 'del'};
+      global.distribution[context.gid].comm.send(message, remote, (e, v) => {
+        callback(e, v);
       });
     },
 
     get: (name, callback) => {
       callback = orDefault.callbackOrDefault(callback);
-      global.distribution.local.groups.get(context.gid, (e, groups) => {
-        if (e) {
-          callback(e);
-        } else {
-          const nodeIds = groups.keys();
-
-          const values = {};
-          const errors = {};
-          let counter = 0;
-
-          const processUntilDone = () => {
-            if (counter == nodeIds.length()) {
-              callback(errors, values);
-            } else {
-              const nodeId = nodeIds[counter];
-              global.distribution.local.groups.get(name, (e, v) => {
-                if (e) {
-                  errors[nodeId] = e;
-                } else {
-                  values[nodeId] = v;
-                  counter++;
-                  processUntilDone();
-                }
-              });
-            }
-          };
-          processUntilDone();
-        }
+      const message = [name];
+      const remote = {service: 'groups', method: 'get'};
+      global.distribution[context.gid].comm.send(message, remote, (e, v) => {
+        callback(e, v);
       });
     },
 
     add: (name, node, callback) => {
       callback = orDefault.callbackOrDefault(callback);
-      global.distribution.local.groups.get(context.gid, (e, groups) => {
-        if (e) {
-          callback(e);
-        } else {
-          const nodeIds = groups.keys();
-
-          const values = {};
-          const errors = {};
-          let counter = 0;
-
-          const processUntilDone = () => {
-            if (counter == nodeIds.length()) {
-              callback(errors, values);
-            } else {
-              const nodeId = nodeIds[counter];
-              global.distribution.local.groups.put(name, node, (e, v) => {
-                if (e) {
-                  errors[nodeId] = e;
-                } else {
-                  values[nodeId] = v;
-                  counter++;
-                  processUntilDone();
-                }
-              });
-            }
-          };
-          processUntilDone();
-        }
+      const message = [name, node];
+      const remote = {service: 'groups', method: 'add'};
+      global.distribution[context.gid].comm.send(message, remote, (e, v) => {
+        callback(e, v);
       });
     },
 
     rem: (name, node, callback) => {
       callback = orDefault.callbackOrDefault(callback);
-      global.distribution.local.groups.get(context.gid, (e, groups) => {
-        if (e) {
-          callback(e);
-        } else {
-          const nodeIds = groups.keys();
-
-          const values = {};
-          const errors = {};
-          let counter = 0;
-
-          const processUntilDone = () => {
-            if (counter == nodeIds.length()) {
-              callback(errors, values);
-            } else {
-              const nodeId = nodeIds[counter];
-              global.distribution.local.groups.put(name, node, (e, v) => {
-                if (e) {
-                  errors[nodeId] = e;
-                } else {
-                  values[nodeId] = v;
-                  counter++;
-                  processUntilDone();
-                }
-              });
-            }
-          };
-          processUntilDone();
-        }
+      const message = [name, node];
+      const remote = {service: 'groups', method: 'rem'};
+      global.distribution[context.gid].comm.send(message, remote, (e, v) => {
+        callback(e, v);
       });
     },
   };
