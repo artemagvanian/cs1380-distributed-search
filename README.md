@@ -116,3 +116,30 @@ My implementation comprises `4` software components, totaling `118` lines of cod
 
 > How would you explain the implementation of `createRPC` to someone who has no background in computer science — i.e., with the minimum jargon possible?
 Imagine a situation where you are opening a post office and need to give a set of instructions to all other post offices about how to send correspondence to you. `createRPC` metaphorically generates these instructions; if you send the instructions to another post office, a third post office could reach that post office and ask it to forward the correspondence to you.  
+
+
+# M3: Node Groups & Gossip Protocols
+
+## Summary
+
+> Summarize your implementation, including key challenges you encountered. Remember to update the `report` section of the `package.json` file with the total number of hours it took you to complete each task of M3 (`hours`) and the lines of code per task.
+
+My implementation comprises `8` new software components, totaling `200` added lines of code over the previous implementation. Key challenges included figuring out how to use `spawn` and `stop` from the reference implementation, which was solved by contacting the staff on EdStem.
+
+## Correctness & Performance Characterization
+
+> Describe how you characterized the correctness and performance of your implementation
+
+*Correctness* -- number of tests and time they take.
+
+ I wrote `5` tests; these tests take ~0.6s to execute.
+
+*Performance* -- spawn times (all students) and gossip (lab/ec-only).
+
+I characterized the performance of spawn times by sending 100 spawn requests (see `./harnesses/m3.harness.js`). Average throughput and latency are recorded in `package.json` (in op/s, s/op).
+
+## Key Feature
+
+> What is the point of having a gossip protocol? Why doesn't a node just send the message to _all_ other nodes in its group?
+
+The point of having a gossip protocol is to ensure the spread of information in a way that is both resistant to failures of certain nodes but at the same time does not require enormous amount of communication (as it would be if a node sends the message to all other nodes).
