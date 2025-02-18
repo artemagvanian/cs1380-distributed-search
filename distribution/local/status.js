@@ -39,8 +39,8 @@ status.get = function(configuration, callback) {
   }
 };
 
-status.spawn = require('@brown-ds/distribution').local.status.spawn;
+status.spawn = require('@brown-ds/distribution/distribution/local/status').spawn;
 
-status.stop = require('@brown-ds/distribution').local.status.stop;
+status.stop = require('@brown-ds/distribution/distribution/local/status').stop;
 
 module.exports = status;

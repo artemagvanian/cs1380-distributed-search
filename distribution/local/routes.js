@@ -27,7 +27,12 @@ function get(configuration, callback) {
     if (routes[configuration.service]) {
       callback(null, routes[configuration.service]);
     } else {
-      callback(new Error(`service with name ${configuration.service} does not exist`));
+      const rpc = global.toLocal[configuration.service];
+      if (rpc) {
+        callback(null, {call: rpc});
+      } else {
+        callback(new Error(`service ${configuration.service} not found!`));
+      }
     }
   } else {
     if (global.distribution[configuration.gid]) {
