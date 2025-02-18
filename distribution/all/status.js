@@ -28,9 +28,7 @@ const status = function(config) {
     stop: (callback) => {
       callback = orDefault.callbackOrDefault(callback);
       const remote = {service: 'status', method: 'stop'};
-      global.distribution[context.gid].comm.send([], remote, () => {
-        global.distribution.local.status.stop(callback);
-      });
+      global.distribution[context.gid].comm.send([], remote, callback);
     },
   };
 };
