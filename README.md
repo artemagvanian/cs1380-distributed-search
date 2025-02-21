@@ -143,3 +143,31 @@ I characterized the performance of spawn times by sending 100 spawn requests (se
 > What is the point of having a gossip protocol? Why doesn't a node just send the message to _all_ other nodes in its group?
 
 The point of having a gossip protocol is to ensure the spread of information in a way that is both resistant to failures of certain nodes but at the same time does not require enormous amount of communication (as it would be if a node sends the message to all other nodes).
+
+# M4: Distributed Storage
+
+## Summary
+
+> Summarize your implementation, including key challenges you encountered
+
+My implementation comprises `84` new software components, totaling `215` added lines of code over the previous implementation. The milestone went rather smoothly so there were no big challenges.
+
+Remember to update the `report` section of the `package.json` file with the total number of hours it took you to complete each task of M4 (`hours`) and the lines of code per task.
+
+## Correctness & Performance Characterization
+
+> Describe how you characterized the correctness and performance of your implementation
+
+*Correctness* -- number of tests and time they take.
+
+I wrote `5` tests; these tests take ~0.8s to execute.
+
+*Performance* -- insertion and retrieval.
+
+I characterized the performance of distributed storage by sending 1000 `put` and 1000 `get` requests to a sharded in-memory key-value store (see `./harnesses/m4.harness.js`). Average throughput and latency are recorded in `package.json` (in rps, µs).
+
+## Key Feature
+
+> Why is the `reconf` method designed to first identify all the keys to be relocated and then relocate individual objects instead of fetching all the objects immediately and then pushing them to their corresponding locations?
+
+If I understand the question correctly, fetching and pushing all objects would require performing an enormous amount of communication, while identifying the ones that need to be relocated first and then moving them would only move those objects that necessarily need to be moved, resulting in smaller communication cost.
