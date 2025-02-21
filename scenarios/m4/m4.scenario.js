@@ -110,7 +110,7 @@ test('(5 pts) (scenario) use mem.reconf', (done) => {
   ];
 
   // Experiment with different hash functions...
-  const config = {gid: 'mygroup', hash: util.id.consistentHash};
+  const config = {gid: 'mygroup', hash: util.id.naiveHash};
 
   distribution.local.groups.put(config, mygroupGroup, (e, v) => {
     // Now, place each one of the items you made inside the group...
@@ -148,7 +148,7 @@ test('(5 pts) (scenario) use mem.reconf', (done) => {
     ];
 
     // Based on where you think the items should be, send the messages to the right nodes...
-    const remote = {node: n4, service: 'mem', method: 'get'};
+    const remote = {node: distribution.node.config, service: 'mem', method: 'get'};
     distribution.local.comm.send(messages[0], remote, (e, v) => {
       try {
         expect(e).toBeFalsy();
@@ -157,7 +157,7 @@ test('(5 pts) (scenario) use mem.reconf', (done) => {
         done(error);
         return;
       }
-      const remote = {node: n4, service: 'mem', method: 'get'};
+      const remote = {node: distribution.node.config, service: 'mem', method: 'get'};
       distribution.local.comm.send(messages[1], remote, (e, v) => {
         try {
           expect(e).toBeFalsy();
@@ -166,7 +166,7 @@ test('(5 pts) (scenario) use mem.reconf', (done) => {
           done(error);
           return;
         }
-        const remote = {node: n1, service: 'mem', method: 'get'};
+        const remote = {node: n2, service: 'mem', method: 'get'};
         distribution.local.comm.send(messages[2], remote, (e, v) => {
           try {
             expect(e).toBeFalsy();

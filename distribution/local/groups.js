@@ -14,27 +14,27 @@ groups.get = function(name, callback) {
 };
 
 groups.put = function(config, group, callback) {
-  if (typeof config == 'object' && config != null) {
-    config = config.gid;
+  if (typeof config == 'string') {
+    config = {gid: config};
   }
   group = orDefault.objectOrDefault(group);
   callback = orDefault.callbackOrDefault(callback);
-  groups[config] = group;
-  global.distribution[config] = {};
-  global.distribution[config].status =
-      require('../all/status')({gid: config});
-  global.distribution[config].comm =
-      require('../all/comm')({gid: config});
-  global.distribution[config].gossip =
-      require('../all/gossip')({gid: config});
-  global.distribution[config].groups =
-      require('../all/groups')({gid: config});
-  global.distribution[config].routes =
-      require('../all/routes')({gid: config});
-  global.distribution[config].mem =
-      require('../all/mem')({gid: config});
-  global.distribution[config].store =
-      require('../all/store')({gid: config});
+  groups[config.gid] = group;
+  global.distribution[config.gid] = {};
+  global.distribution[config.gid].status =
+      require('../all/status')(config);
+  global.distribution[config.gid].comm =
+      require('../all/comm')(config);
+  global.distribution[config.gid].gossip =
+      require('../all/gossip')(config);
+  global.distribution[config.gid].groups =
+      require('../all/groups')(config);
+  global.distribution[config.gid].routes =
+      require('../all/routes')(config);
+  global.distribution[config.gid].mem =
+      require('../all/mem')(config);
+  global.distribution[config.gid].store =
+      require('../all/store')(config);
   callback(null, group);
 };
 
