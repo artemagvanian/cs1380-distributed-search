@@ -47,9 +47,10 @@ test('(0 pts) (scenario) all.mr:ncdc', (done) => {
     {'212': '004301199099999 1950 0515180049999999N9 -0011 1+9999'},
     {'318': '004301265099999 1949 0324120040500001N9 +0111 1+9999'},
     {'424': '004301265099999 1949 0324180040500001N9 +0078 1+9999'},
+    {'127': '004301265099999 1951 0324180040500001N9 +0110 1+9999'},
   ];
 
-  const expected = [{'1950': 22}, {'1949': 111}];
+  const expected = [{'1951': 110}, {'1950': 22}, {'1949': 111}];
 
   const doMapReduce = (cb) => {
     distribution.ncdc.store.get(null, (e, v) => {
@@ -94,9 +95,17 @@ test('(10 pts) (scenario) all.mr:dlib', (done) => {
 */
 
   const mapper = (key, value) => {
+    return value.split(' ').map((value) => {
+      const result = {};
+      result[value] = 1;
+      return result;
+    });
   };
 
   const reducer = (key, values) => {
+    const result = {};
+    result[key] = values.reduce((a, b) => a + b);
+    return result;
   };
 
   const dataset = [
@@ -169,10 +178,34 @@ test('(10 pts) (scenario) all.mr:tfidf', (done) => {
 */
 
   const mapper = (key, value) => {
+    const nw = value.split(' ').length;
+    const result = Object.entries(value.split(' ').reduce((acc, elt) => {
+      if (elt in acc) {
+        acc[elt]++;
+      } else {
+        acc[elt] = 1;
+      }
+      return acc;
+    }, {})).map(([word, freq]) => {
+      const result = {};
+      result[word] = {};
+      result[word][key] = freq / nw;
+      return result;
+    });
+    return result;
   };
 
   // Reduce function: calculate TF-IDF for each word
   const reducer = (key, values) => {
+    const tfidf = {};
+    for (const value of values) {
+      for (const k in value) {
+        tfidf[k] = +(value[k] * Math.log10(3 / values.length)).toFixed(2);
+      }
+    }
+    const result = {};
+    result[key] = tfidf;
+    return result;
   };
 
   const dataset = [
@@ -234,23 +267,78 @@ test('(10 pts) (scenario) all.mr:tfidf', (done) => {
 */
 
 test('(10 pts) (scenario) all.mr:crawl', (done) => {
-    done(new Error('Implement this test.'));
+  done(new Error('Implement this test.'));
 });
 
 test('(10 pts) (scenario) all.mr:urlxtr', (done) => {
-    done(new Error('Implement the map and reduce functions'));
+  done(new Error('Implement the map and reduce functions'));
 });
 
 test('(10 pts) (scenario) all.mr:strmatch', (done) => {
-    done(new Error('Implement the map and reduce functions'));
+  const mapper = (key, value) => {
+    const regex = /foo/g;
+    const result = {};
+    result[key] = regex.test(value);
+    return result;
+  };
+
+  const reducer = (key, values) => {
+    const result = {};
+    result[key] = values.reduce((a, b) => a && b);
+    return result;
+  };
+
+  const dataset = [
+    {'a': 'foo foo foo'},
+    {'b': 'bar bar bar'},
+    {'c': 'foo bar'},
+  ];
+
+  const expected = [
+    {'a': true}, {'b': false}, {'c': true},
+  ];
+
+  const doMapReduce = (cb) => {
+    distribution.strmatch.store.get(null, (e, v) => {
+      try {
+        expect(v.length).toBe(dataset.length);
+      } catch (e) {
+        done(e);
+      }
+
+      distribution.strmatch.mr.exec({keys: v, map: mapper, reduce: reducer}, (e, v) => {
+        try {
+          expect(v).toEqual(expect.arrayContaining(expected));
+          done();
+        } catch (e) {
+          done(e);
+        }
+      });
+    });
+  };
+
+  let cntr = 0;
+
+  // Send the dataset to the cluster
+  dataset.forEach((o) => {
+    const key = Object.keys(o)[0];
+    const value = o[key];
+    distribution.strmatch.store.put(value, key, (e, v) => {
+      cntr++;
+      // Once the dataset is in place, run the map reduce
+      if (cntr === dataset.length) {
+        doMapReduce();
+      }
+    });
+  });
 });
 
 test('(10 pts) (scenario) all.mr:ridx', (done) => {
-    done(new Error('Implement the map and reduce functions'));
+  done(new Error('Implement the map and reduce functions'));
 });
 
 test('(10 pts) (scenario) all.mr:rlg', (done) => {
-    done(new Error('Implement the map and reduce functions'));
+  done(new Error('Implement the map and reduce functions'));
 });
 
 /*
@@ -315,7 +403,12 @@ beforeAll((done) => {
               const tfidfConfig = {gid: 'tfidf'};
               distribution.local.groups.put(tfidfConfig, tfidfGroup, (e, v) => {
                 distribution.tfidf.groups.put(tfidfConfig, tfidfGroup, (e, v) => {
-                  done();
+                  const strmatchConfig = {gid: 'strmatch'};
+                  distribution.local.groups.put(strmatchConfig, strmatchGroup, (e, v) => {
+                    distribution.strmatch.groups.put(strmatchConfig, strmatchGroup, (e, v) => {
+                      done();
+                    });
+                  });
                 });
               });
             });
