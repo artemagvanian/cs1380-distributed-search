@@ -74,6 +74,7 @@ function rem(configuration, callback) {
   callback = orDefault.callbackOrDefault(callback);
   if (routes[configuration]) {
     delete routes[configuration];
+    callback(null);
   } else {
     callback(new Error(`service with name ${configuration} does not exist`));
   }

@@ -18,12 +18,11 @@ function routes(config) {
   }
 
   /**
-   * @param {object} service
    * @param {string} name
    * @param {Callback} callback
    */
-  function rem(service, name, callback = () => { }) {
-    const message = [service, name];
+  function rem(name, callback = () => { }) {
+    const message = [name];
     const remote = {service: 'routes', method: 'rem'};
     global.distribution[context.gid].comm.send(message, remote, (e, v) => {
       callback(e, v);

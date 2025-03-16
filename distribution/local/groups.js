@@ -33,6 +33,8 @@ groups.put = function(config, group, callback) {
       require('../all/routes')(config);
   global.distribution[config.gid].mem =
       require('../all/mem')(config);
+  global.distribution[config.gid].mr =
+      require('../all/mr')(config);
   global.distribution[config.gid].store =
       require('../all/store')(config);
   callback(null, group);

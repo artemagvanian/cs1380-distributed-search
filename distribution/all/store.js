@@ -7,7 +7,7 @@ function store(config) {
   /* For the distributed store service, the configuration will
           always be a string */
   return {
-    get: (configuration, callback) => {
+    get: (configuration, callback = () => {}) => {
       global.distribution.local.groups.get(context.gid, (e, v) => {
         if (e) {
           callback(new Error('group not found'));
@@ -24,7 +24,7 @@ function store(config) {
       });
     },
 
-    put: (state, configuration, callback) => {
+    put: (state, configuration, callback = () => {}) => {
       if (configuration == null) {
         configuration = global.distribution.util.id.getID(state);
       }
@@ -44,7 +44,7 @@ function store(config) {
       });
     },
 
-    del: (configuration, callback) => {
+    del: (configuration, callback = () => {}) => {
       global.distribution.local.groups.get(context.gid, (e, v) => {
         if (e) {
           callback(new Error('group not found'));

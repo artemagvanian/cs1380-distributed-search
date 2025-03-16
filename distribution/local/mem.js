@@ -2,7 +2,7 @@ const id = require('../util/id');
 
 const map = {};
 
-function put(state, configuration, callback) {
+function put(state, configuration, callback = () => {}) {
   if (typeof configuration == 'string' || configuration == null) {
     configuration = {gid: 'local', key: configuration};
   }
@@ -16,7 +16,7 @@ function put(state, configuration, callback) {
   callback(null, state);
 };
 
-function get(configuration, callback) {
+function get(configuration, callback = () => {}) {
   if (typeof configuration == 'string' || configuration == null) {
     configuration = {gid: 'local', key: configuration};
   }
@@ -31,7 +31,7 @@ function get(configuration, callback) {
   }
 }
 
-function del(configuration, callback) {
+function del(configuration, callback = () => {}) {
   if (typeof configuration == 'string' || configuration == null) {
     configuration = {gid: 'local', key: configuration};
   }
