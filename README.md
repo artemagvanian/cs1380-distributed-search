@@ -171,3 +171,25 @@ I characterized the performance of distributed storage by sending 1000 `put` and
 > Why is the `reconf` method designed to first identify all the keys to be relocated and then relocate individual objects instead of fetching all the objects immediately and then pushing them to their corresponding locations?
 
 If I understand the question correctly, fetching and pushing all objects would require performing an enormous amount of communication, while identifying the ones that need to be relocated first and then moving them would only move those objects that necessarily need to be moved, resulting in smaller communication cost.
+
+# M5: Distributed Execution Engine
+
+## Summary
+
+> Summarize your implementation, including key challenges you encountered. Remember to update the `report` section of the `package.json` file with the total number of hours it took you to complete each task of M5 (`hours`) and the lines of code per task.
+
+My implementation comprises `1` new software component, totaling `240` added lines of code over the previous implementation. Key challenges included debugging silent failures due to passing wrong arguments to wrong functions; I solved it by extensive logging.
+
+## Correctness & Performance Characterization
+
+> Describe how you characterized the correctness and performance of your implementation
+
+*Correctness*: I wrote 5 cases testing empty documents, case-sensitivity, empty dataset.
+
+*Performance*: My letter frequency count workflow can sustain 36.98 documents/second, with an average latency of 0.027 seconds per document.
+
+## Key Feature
+
+> Which extra features did you implement and how?
+
+None.

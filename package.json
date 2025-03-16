@@ -26,18 +26,18 @@
     "@brown-ds/distribution": "latest"
   },
   "report": {
-    "hours": 4,
-    "loc": 215,
+    "hours": 7,
+    "loc": 240,
     "dev": {
       "cpu-no": 10,
       "mem-gb": 16,
       "ssd-gb": 1024
     },
     "throughput": {
-      "aws": [1730, 1640]
+      "dev": [36.98]
     },
     "latency": {
-      "aws": [578, 610]
+      "dev": [0.027]
     },
     "dloc": -99
   }
