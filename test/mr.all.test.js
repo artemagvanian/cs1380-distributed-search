@@ -39,22 +39,13 @@ test('(25 pts) all.mr:ncdc', (done) => {
   const expected = [{'1950': 22}, {'1949': 111}];
 
   const doMapReduce = (cb) => {
-    distribution.ncdc.store.get(null, (e, v) => {
+    distribution.ncdc.mr.exec({keys: dataset.map((e) => Object.keys(e)[0]), map: mapper, reduce: reducer}, (e, v) => {
       try {
-        expect(v.length).toBe(dataset.length);
+        expect(v).toEqual(expect.arrayContaining(expected));
+        done();
       } catch (e) {
         done(e);
       }
-
-
-      distribution.ncdc.mr.exec({keys: v, map: mapper, reduce: reducer}, (e, v) => {
-        try {
-          expect(v).toEqual(expect.arrayContaining(expected));
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
     });
   };
 
@@ -108,21 +99,13 @@ test('(25 pts) all.mr:avgwrdl', (done) => {
   ];
 
   const doMapReduce = (cb) => {
-    distribution.avgwrdl.store.get(null, (e, v) => {
+    distribution.avgwrdl.mr.exec({keys: dataset.map((e) => Object.keys(e)[0]), map: mapper, reduce: reducer}, (e, v) => {
       try {
-        expect(v.length).toBe(dataset.length);
+        expect(v).toEqual(expect.arrayContaining(expected));
+        done();
       } catch (e) {
         done(e);
       }
-
-      distribution.avgwrdl.mr.exec({keys: v, map: mapper, reduce: reducer}, (e, v) => {
-        try {
-          expect(v).toEqual(expect.arrayContaining(expected));
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
     });
   };
 
@@ -175,21 +158,13 @@ test('(25 pts) all.mr:cfreq', (done) => {
   ];
 
   const doMapReduce = (cb) => {
-    distribution.cfreq.store.get(null, (e, v) => {
+    distribution.cfreq.mr.exec({keys: dataset.map((e) => Object.keys(e)[0]), map: mapper, reduce: reducer}, (e, v) => {
       try {
-        expect(v.length).toBe(dataset.length);
+        expect(v).toEqual(expect.arrayContaining(expected));
+        done();
       } catch (e) {
         done(e);
       }
-
-      distribution.cfreq.mr.exec({keys: v, map: mapper, reduce: reducer}, (e, v) => {
-        try {
-          expect(v).toEqual(expect.arrayContaining(expected));
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
     });
   };
 
