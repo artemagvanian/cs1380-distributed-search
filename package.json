@@ -23,22 +23,9 @@
   "license": "ISC",
   "dependencies": {
     "yargs": "^17.7.2",
-    "@brown-ds/distribution": "latest"
-  },
-  "report": {
-    "hours": 7,
-    "loc": 240,
-    "dev": {
-      "cpu-no": 10,
-      "mem-gb": 16,
-      "ssd-gb": 1024
-    },
-    "throughput": {
-      "dev": [36.98]
-    },
-    "latency": {
-      "dev": [0.027]
-    },
-    "dloc": -99
+    "@brown-ds/distribution": "latest",
+    "html-to-text": "^9.0.5",
+    "jsdom": "^23.2.0",
+    "natural": "^6.10.4"
   }
 }

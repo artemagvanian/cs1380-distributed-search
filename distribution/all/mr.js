@@ -64,9 +64,13 @@ function mr(config) {
           if (i < keys.length) {
             global.distribution.local.store.get({key: keys[i], gid}, (e, v) => {
               if (e == null) {
-                processed.push(...func(keys[i], v));
+                func(keys[i], v, (r) => {
+                  processed.push(...r);
+                  process(i + 1);
+                });
+              } else {
+                process(i + 1);
               }
-              process(i + 1);
             });
           } else {
             store(0);
@@ -114,17 +118,19 @@ function mr(config) {
                 send(i + 1);
               });
             } else {
-              const r = {node: coordinator, service: serviceName, method: 'coordinator'};
-              global.distribution.local.comm.send([
-                {
-                  message: 'doneShuffling',
-                  node: global.nodeConfig,
-                  serviceName: config.serviceName,
-                }], r, (e) => {
-                if (e != null) {
-                  global.distribution.util.log(e, 'error');
-                }
-                global.distribution.util.log(`worker done shuffling`);
+              global.distribution.local.store.del({key: serviceName + 'mapped', gid}, (e, v) => {
+                const r = {node: coordinator, service: serviceName, method: 'coordinator'};
+                global.distribution.local.comm.send([
+                  {
+                    message: 'doneShuffling',
+                    node: global.nodeConfig,
+                    serviceName: config.serviceName,
+                  }], r, (e) => {
+                  if (e != null) {
+                    global.distribution.util.log(e, 'error');
+                  }
+                  global.distribution.util.log(`worker done shuffling`);
+                });
               });
             }
           };
@@ -167,22 +173,25 @@ function mr(config) {
           const process = (i) => {
             if (i < Object.keys(received).length) {
               const [key, value] = Object.entries(received)[i];
-              const result = func(key, value);
-              processed = Object.assign(processed, result);
-              process(i + 1);
+              func(key, value, (r) => {
+                processed = Object.assign(processed, r);
+                process(i + 1);
+              });
             } else {
-              const r = {node: coordinator, service: serviceName, method: 'coordinator'};
-              global.distribution.local.comm.send([
-                {
-                  message: 'doneReducing',
-                  node: global.nodeConfig,
-                  serviceName: config.serviceName,
-                  result: processed,
-                }], r, (e) => {
-                if (e != null) {
-                  global.distribution.util.log(e, 'error');
-                }
-                global.distribution.util.log(`worker done reducing ${JSON.stringify(processed)}`);
+              global.distribution.local.store.del({key: serviceName + 'received', gid}, (e, v) => {
+                const r = {node: coordinator, service: serviceName, method: 'coordinator'};
+                global.distribution.local.comm.send([
+                  {
+                    message: 'doneReducing',
+                    node: global.nodeConfig,
+                    serviceName: config.serviceName,
+                    result: processed,
+                  }], r, (e) => {
+                  if (e != null) {
+                    global.distribution.util.log(e, 'error');
+                  }
+                  global.distribution.util.log(`worker done reducing ${JSON.stringify(processed)}`);
+                });
               });
             }
           };

@@ -37,6 +37,10 @@ const mem = require('./mem');
 
 const store = require('./store');
 
+/* Search Service */
+
+const search = require('./search');
+
 module.exports = {
   status: status,
   routes: routes,
@@ -44,5 +48,6 @@ module.exports = {
   groups: groups,
   gossip: gossip,
   mem: mem,
+  search: search,
   store: store,
 };
