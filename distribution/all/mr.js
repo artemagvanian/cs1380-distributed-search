@@ -48,7 +48,9 @@ function mr(config) {
     const mrServiceName = 'mr-' + Math.random().toString(36).substring(2);
 
     mrService.worker = (config, callback) => {
-      global.distribution.util.log(`worker received message ${JSON.stringify(config)}`);
+      if (config.message != 'receive') {
+        global.distribution.util.log(`worker received message ${config.message}`);
+      }
 
       const message = config.message;
       if (message == 'map') {
@@ -78,7 +80,10 @@ function mr(config) {
         };
 
         const store = () => {
-          global.distribution.local.store.put(processed, {key: serviceName + 'mapped', gid}, () => {
+          global.distribution.local.store.put(processed, {key: serviceName + 'mapped', gid}, (e) => {
+            if (e != null) {
+              global.distribution.util.log(e, 'error');
+            }
             const r = {node: coordinator, service: serviceName, method: 'coordinator'};
             global.distribution.local.comm.send([
               {
@@ -89,7 +94,7 @@ function mr(config) {
               if (e != null) {
                 global.distribution.util.log(e, 'error');
               }
-              global.distribution.util.log(`worker done mapping ${JSON.stringify(processed)}`);
+              global.distribution.util.log(`worker done mapping; mapped ${processed.length} items`);
             });
           });
         };
@@ -102,6 +107,10 @@ function mr(config) {
         const gid = config.gid;
 
         global.distribution.local.store.get({key: serviceName + 'mapped', gid}, (e, v) => {
+          if (e != null) {
+            global.distribution.util.log(e, 'error');
+          }
+
           const mapped = v;
           const send = (i) => {
             if (i < mapped.length) {
@@ -118,7 +127,10 @@ function mr(config) {
                 send(i + 1);
               });
             } else {
-              global.distribution.local.store.del({key: serviceName + 'mapped', gid}, (e, v) => {
+              global.distribution.local.store.del({key: serviceName + 'mapped', gid}, (e) => {
+                if (e != null) {
+                  global.distribution.util.log(e, 'error');
+                }
                 const r = {node: coordinator, service: serviceName, method: 'coordinator'};
                 global.distribution.local.comm.send([
                   {
@@ -129,7 +141,7 @@ function mr(config) {
                   if (e != null) {
                     global.distribution.util.log(e, 'error');
                   }
-                  global.distribution.util.log(`worker done shuffling`);
+                  global.distribution.util.log(`worker done shuffling; shuffled ${mapped.length} items`);
                 });
               });
             }
@@ -166,9 +178,6 @@ function mr(config) {
         let processed = {};
 
         global.distribution.local.store.get({key: serviceName + 'received', gid}, (e, v) => {
-          if (e != null) {
-            global.distribution.util.log(e, 'error');
-          }
           const received = v || {};
           const process = (i) => {
             if (i < Object.keys(received).length) {
@@ -178,7 +187,7 @@ function mr(config) {
                 process(i + 1);
               });
             } else {
-              global.distribution.local.store.del({key: serviceName + 'received', gid}, (e, v) => {
+              global.distribution.local.store.del({key: serviceName + 'received', gid}, (e) => {
                 const r = {node: coordinator, service: serviceName, method: 'coordinator'};
                 global.distribution.local.comm.send([
                   {
@@ -190,7 +199,7 @@ function mr(config) {
                   if (e != null) {
                     global.distribution.util.log(e, 'error');
                   }
-                  global.distribution.util.log(`worker done reducing ${JSON.stringify(processed)}`);
+                  global.distribution.util.log(`worker done reducing; reduced ${Object.keys(received).length} items`);
                 });
               });
             }
@@ -219,7 +228,12 @@ function mr(config) {
               coordinator: global.nodeConfig,
               serviceName, gid,
               nodes: global.mrStatus[serviceName].nodes,
-            }], remote, () => {
+            }], remote, (e) => {
+            if (e != {}) {
+              for (const node in e) {
+                global.distribution.util.log(`${node}: ${e[node]}`, 'error');
+              }
+            }
             global.distribution.util.log('coordinator: start shuffle phase');
           });
         }
@@ -233,7 +247,12 @@ function mr(config) {
               coordinator: global.nodeConfig,
               serviceName, gid,
               func: configuration.reduce,
-            }], remote, () => {
+            }], remote, (e) => {
+            if (e != {}) {
+              for (const node in e) {
+                global.distribution.util.log(`${node}: ${e[node]}`, 'error');
+              }
+            }
             global.distribution.util.log('coordinator: start reduce phase');
           });
         }
@@ -245,7 +264,12 @@ function mr(config) {
           return r;
         }));
         if (Object.keys(global.mrStatus[serviceName].nodes).length == global.mrStatus[serviceName].doneReducing.length) {
-          global.distribution[gid].routes.rem(serviceName, (e, v) => {
+          global.distribution[gid].routes.rem(serviceName, (e) => {
+            if (e != {}) {
+              for (const node in e) {
+                global.distribution.util.log(`${node}: ${e[node]}`, 'error');
+              }
+            }
             global.mrStatus[serviceName].cb(null, global.mrStatus[serviceName].result);
           });
         }
@@ -265,8 +289,16 @@ function mr(config) {
     };
 
     const remote = {service: mrServiceName, method: 'worker'};
-    global.distribution.local.routes.put(mrService, mrServiceName, (e, v) => {
-      global.distribution[context.gid].routes.put(mrService, mrServiceName, (e, nodes) => {
+    global.distribution.local.routes.put(mrService, mrServiceName, (e) => {
+      if (e != null) {
+        global.distribution.util.log(e, 'error');
+      }
+      global.distribution[context.gid].routes.put(mrService, mrServiceName, (e) => {
+        if (e != {}) {
+          for (const node in e) {
+            global.distribution.util.log(`${node}: ${e[node]}`, 'error');
+          }
+        }
         global.distribution.local.groups.get(context.gid, (e, nodes) => {
           if (e != null) {
             cb(e);
@@ -280,7 +312,12 @@ function mr(config) {
                 gid: context.gid,
                 keys: configuration.keys,
                 func: configuration.map,
-              }], remote, () => {
+              }], remote, (e) => {
+              if (e != {}) {
+                for (const node in e) {
+                  global.distribution.util.log(`${node}: ${e[node]}`, 'error');
+                }
+              }
               global.distribution.util.log('coordinator: start mapping phase');
             });
           }

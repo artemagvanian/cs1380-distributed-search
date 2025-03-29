@@ -40,6 +40,7 @@ function send(message, remote, callback) {
     method: 'PUT',
     headers: {
       'Content-Length': Buffer.byteLength(data),
+      'Connection': 'keep-alive',
     },
   };
 
@@ -58,8 +59,15 @@ function send(message, remote, callback) {
     });
   });
 
-  req.on('error', () => {
-    callback(new Error('failed to communicate with node'));
+  req.on('error', (e) => {
+    if (e.code == 'ECONNRESET') {
+      global.distribution.util.log(e, 'error');
+      setTimeout(() => {
+        send(message, remote, callback); // Retry 1s later.
+      }, 1000);
+    } else {
+      callback(e);
+    }
   });
 
   req.write(data);

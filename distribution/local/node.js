@@ -1,5 +1,4 @@
 const http = require('http');
-const log = require('../util/log');
 const routes = require('./routes');
 const {deserialize, serialize} = require('../util/serialization');
 
@@ -11,10 +10,11 @@ const {deserialize, serialize} = require('../util/serialization');
 
 
 const start = function(callback) {
-  const server = http.createServer((req, res) => {
+  const server = http.createServer({}, (req, res) => {
     /* Your server will be listening for PUT requests. */
 
     if (req.method != 'PUT') {
+      global.distribution.util.log(`received a call with wrong method`);
       return;
     }
 
@@ -38,7 +38,7 @@ const start = function(callback) {
       format.
 
       Our nodes expect data in JSON format.
-  */
+    */
 
     let body = '';
     req.on('data', (chunk) => {
@@ -102,14 +102,13 @@ const start = function(callback) {
   */
 
   server.listen(global.nodeConfig.port, global.nodeConfig.ip, () => {
-    log(`Server running at http://${global.nodeConfig.ip}:${global.nodeConfig.port}/`);
+    global.distribution.util.log(`Server running at http://${global.nodeConfig.ip}:${global.nodeConfig.port}/`);
     global.distribution.node.server = server;
     callback(server);
   });
 
   server.on('error', (error) => {
-    // server.close();
-    log(`Server error: ${error}`);
+    global.distribution.util.log(`Server error: ${error}`, 'error');
     throw error;
   });
 };

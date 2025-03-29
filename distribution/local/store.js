@@ -16,7 +16,7 @@ function put(state, configuration, callback = () => {}) {
   if (configuration.key == null) {
     configuration.key = id.getID(state);
   }
-  configuration.key = configuration.key.replace(/[^a-zA-Z0-9]/g, '');
+  configuration.key = id.getID(configuration.key);
   const nid = id.getNID(global.nodeConfig);
   const dirPath = path.resolve(`./store/${nid}/${configuration.gid}/`);
   const filePath = path.resolve(`./store/${nid}/${configuration.gid}/${configuration.key}`);
@@ -43,7 +43,7 @@ function get(configuration, callback = () => {}) {
     configuration = {gid: 'local', key: configuration};
   }
   const nid = id.getNID(global.nodeConfig);
-  configuration.key = configuration.key.replace(/[^a-zA-Z0-9]/g, '');
+  configuration.key = id.getID(configuration.key);
   const filePath = path.resolve(`./store/${nid}/${configuration.gid}/${configuration.key}`);
   try {
     const data = fs.readFileSync(filePath);
@@ -62,7 +62,7 @@ function del(configuration, callback = () => {}) {
   if (typeof configuration == 'string' || configuration == null) {
     configuration = {gid: 'local', key: configuration};
   }
-  configuration.key = configuration.key.replace(/[^a-zA-Z0-9]/g, '');
+  configuration.key = id.getID(configuration.key);
   const nid = id.getNID(global.nodeConfig);
   const filePath = path.resolve(`./store/${nid}/${configuration.gid}/${configuration.key}`);
   try {
