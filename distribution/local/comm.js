@@ -60,7 +60,6 @@ function send(message, remote, callback) {
   });
 
   req.on('error', (e) => {
-    console.error(e.code);
     global.distribution.util.log(e, 'error');
     setTimeout(() => {
       send(message, remote, callback); // Retry 100ms later.

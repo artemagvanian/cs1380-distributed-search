@@ -32,13 +32,12 @@ function comm(config) {
 
         const values = {};
         const errors = {};
-        let counter = 0;
 
-        const processUntilDone = () => {
-          if (counter == nodeIds.length) {
+        const processUntilDone = (i) => {
+          if (i == nodeIds.length) {
             callback(errors, values);
           } else {
-            const nodeId = nodeIds[counter];
+            const nodeId = nodeIds[i];
             const node = groups[nodeId];
             global.distribution.local.comm.send(message, {...configuration, node}, (e, v) => {
               if (e) {
@@ -46,12 +45,11 @@ function comm(config) {
               } else {
                 values[nodeId] = v;
               }
-              counter++;
-              processUntilDone();
+              processUntilDone(i + 1);
             });
           }
         };
-        processUntilDone();
+        processUntilDone(0);
       }
     });
   }

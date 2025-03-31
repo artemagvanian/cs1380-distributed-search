@@ -89,4 +89,19 @@ function computeTF(keys, cb) {
   process(0);
 }
 
-module.exports = {findURLs, fetchURL, convertToText, computeTF};
+function queryTF(key, cb) {
+  global.distribution.local.store.get({gid: 'search', key: 'tf'}, (e, tf) => {
+    if (e != null) {
+      global.distribution.util.log(e, 'error');
+      cb(e);
+    } else {
+      if (key in tf) {
+        cb(null, tf[key]);
+      } else {
+        cb(null, []);
+      }
+    }
+  });
+}
+
+module.exports = {findURLs, fetchURL, convertToText, computeTF, queryTF};
