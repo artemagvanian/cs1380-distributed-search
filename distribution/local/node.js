@@ -10,7 +10,7 @@ const {deserialize, serialize} = require('../util/serialization');
 
 
 const start = function(callback) {
-  const server = http.createServer({}, (req, res) => {
+  const server = http.createServer({keepAlive: true, keepAliveTimeout: 30000}, (req, res) => {
     /* Your server will be listening for PUT requests. */
 
     if (req.method != 'PUT') {

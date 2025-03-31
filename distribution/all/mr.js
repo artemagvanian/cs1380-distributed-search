@@ -52,6 +52,8 @@ function mr(config) {
         global.distribution.util.log(`worker received message ${config.message}`);
       }
 
+      callback(null);
+
       const message = config.message;
       if (message == 'map') {
         const keys = config.keys;
@@ -66,10 +68,14 @@ function mr(config) {
           if (i < keys.length) {
             global.distribution.local.store.get({key: keys[i], gid}, (e, v) => {
               if (e == null) {
-                func(keys[i], v, (r) => {
-                  processed.push(...r);
-                  process(i + 1);
-                });
+                try {
+                  func(keys[i], v, (r) => {
+                    processed.push(...r);
+                    process(i + 1);
+                  });
+                } catch (e) {
+                  global.distribution.util.log(e, 'error');
+                }
               } else {
                 process(i + 1);
               }
@@ -106,19 +112,30 @@ function mr(config) {
         const serviceName = config.serviceName;
         const gid = config.gid;
 
-        global.distribution.local.store.get({key: serviceName + 'mapped', gid}, (e, v) => {
+        global.distribution.local.store.get({key: serviceName + 'mapped', gid}, (e, mapped) => {
           if (e != null) {
             global.distribution.util.log(e, 'error');
           }
 
-          const mapped = v;
+          const entryToNode = new Map();
+          for (const entry of mapped) {
+            const [key, value] = Object.entries(entry)[0];
+            const kid = global.distribution.util.id.getID(key);
+            const nids = Object.values(nodes).map((node) => global.distribution.util.id.getNID(node));
+            const node = nodes[global.distribution.util.id.consistentHash(kid, nids).substring(0, 5)];
+            if (entryToNode.has(node)) {
+              const entries = entryToNode.get(node);
+              entries.push([key, value]);
+              entryToNode.set(node, entries);
+            } else {
+              entryToNode.set(node, [[key, value]]);
+            }
+          }
+          const entryToNodeEntries = [...entryToNode.entries()];
           const send = (i) => {
-            if (i < mapped.length) {
-              const [key, value] = Object.entries(mapped[i])[0];
-              const kid = global.distribution.util.id.getID(key);
-              const nids = Object.values(nodes).map((node) => global.distribution.util.id.getNID(node));
-              const node = nodes[global.distribution.util.id.consistentHash(kid, nids).substring(0, 5)];
-              const message = [{key, value, serviceName, gid, message: 'receive'}];
+            if (i < entryToNodeEntries.length) {
+              const [node, entries] = entryToNodeEntries[i];
+              const message = [{entries, serviceName, gid, message: 'receive'}];
               const remote = {node, service: serviceName, method: 'worker'};
               global.distribution.local.comm.send(message, remote, (e) => {
                 if (e != null) {
@@ -149,19 +166,21 @@ function mr(config) {
           send(0);
         });
       } else if (message == 'receive') {
-        const key = config.key;
-        const value = config.value;
+        const entries = config.entries;
         const serviceName = config.serviceName;
         const gid = config.gid;
+
 
         global.distribution.local.store.get({key: serviceName + 'received', gid}, (e, r) => {
           if (e != null) {
             r = {};
           }
-          if (key in r) {
-            r[key].push(value);
-          } else {
-            r[key] = [value];
+          for (const [key, value] of entries) {
+            if (key in r) {
+              r[key].push(value);
+            } else {
+              r[key] = [value];
+            }
           }
           global.distribution.local.store.put(r, {key: serviceName + 'received', gid}, (e) => {
             if (e != null) {
@@ -182,12 +201,16 @@ function mr(config) {
           const process = (i) => {
             if (i < Object.keys(received).length) {
               const [key, value] = Object.entries(received)[i];
-              func(key, value, (r) => {
-                processed = Object.assign(processed, r);
-                process(i + 1);
-              });
+              try {
+                func(key, value, (r) => {
+                  processed = Object.assign(processed, r);
+                  process(i + 1);
+                });
+              } catch (e) {
+                global.distribution.util.log(e, 'error');
+              }
             } else {
-              global.distribution.local.store.del({key: serviceName + 'received', gid}, (e) => {
+              global.distribution.local.store.del({key: serviceName + 'received', gid}, () => {
                 const r = {node: coordinator, service: serviceName, method: 'coordinator'};
                 global.distribution.local.comm.send([
                   {
@@ -207,8 +230,6 @@ function mr(config) {
           process(0);
         });
       }
-
-      callback(null);
     };
 
     mrService.coordinator = (config, callback) => {

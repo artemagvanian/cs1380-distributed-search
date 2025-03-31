@@ -60,14 +60,11 @@ function send(message, remote, callback) {
   });
 
   req.on('error', (e) => {
-    if (e.code == 'ECONNRESET') {
-      global.distribution.util.log(e, 'error');
-      setTimeout(() => {
-        send(message, remote, callback); // Retry 1s later.
-      }, 1000);
-    } else {
-      callback(e);
-    }
+    console.error(e.code);
+    global.distribution.util.log(e, 'error');
+    setTimeout(() => {
+      send(message, remote, callback); // Retry 100ms later.
+    }, 100);
   });
 
   req.write(data);

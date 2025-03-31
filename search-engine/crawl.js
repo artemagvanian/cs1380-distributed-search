@@ -1,54 +1,10 @@
 const distribution = require('../config.js');
-const util = distribution.util;
-
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
+const utils = require('./utils.js');
 
 const BASE_PORT = 7110;
-const START_URL = 'https://cs.brown.edu/courses/csci1380/sandbox/3/';
+const START_URL = process.argv[2];
 
-function perror(e) {
-  if (e != null) {
-    global.distribution.util.log(e, 'error');
-  }
-}
-
-function mkGroup(n) {
-  const nodes = [];
-  for (let i = 0; i < n; i++) {
-    nodes.push({ip: '127.0.0.1', port: BASE_PORT + i});
-  }
-
-  const group = {};
-  for (const node of nodes) {
-    group[util.id.getSID(node)] = node;
-  }
-
-  return [nodes, group];
-}
-
-function spawn(nodes, cb) {
-  if (nodes.length != 0) {
-    distribution.local.status.spawn(nodes[0], (e) => {
-      perror(e);
-      spawn(nodes.slice(1), cb);
-    });
-  } else {
-    cb();
-  }
-}
-
-function stop(nodes, cb) {
-  if (nodes.length != 0) {
-    const remote = {service: 'status', method: 'stop'};
-    remote.node = nodes[0];
-    distribution.local.comm.send([], remote, (e) => {
-      perror(e);
-      stop(nodes.slice(1), cb);
-    });
-  } else {
-    cb();
-  }
-}
+// https://cs.brown.edu/courses/csci1380/sandbox/3
 
 function map(key, value, cb) {
   const urls = global.distribution.local.search.findURLs(key, value);
@@ -88,7 +44,7 @@ function store(dataset, cb, idx = 0) {
   const key = Object.keys(o)[0];
   const value = o[key];
   distribution.search.store.put(value, key, (e) => {
-    perror(e);
+    utils.perror(e);
     if (idx + 1 == dataset.length) {
       cb();
     } else {
@@ -99,12 +55,12 @@ function store(dataset, cb, idx = 0) {
 
 function crawl(dataset, cb, total = []) {
   if (total.length == 0) {
-    total = dataset;
+    total = utils.getKeys(dataset);
   }
   distribution.search.mr.exec({keys: dataset.map((o) => Object.keys(o)[0]), map, reduce}, (e, v) => {
-    perror(e);
+    utils.perror(e);
     if (Object.keys(v).length != 0) {
-      total.push(...v);
+      total.push(...utils.getKeys(v));
       crawl(v, cb, total);
     } else {
       cb(total);
@@ -114,27 +70,25 @@ function crawl(dataset, cb, total = []) {
 
 distribution.node.start((server) => {
   const config = {gid: 'search'};
-  const [nodes, group] = mkGroup(3);
-  spawn(nodes, () => {
-    distribution.local.groups
-        .put(config, group, (e) => {
-          perror(e);
-          distribution.local.search.fetchURL(START_URL, (e, urlData) => {
-            perror(e);
+  const group = utils.mkGroup(3, BASE_PORT);
+  distribution.local.groups
+      .put(config, group, (e) => {
+        utils.perror(e);
+        distribution.local.search.fetchURL(START_URL, (e, urlData) => {
+          utils.perror(e);
 
-            const datum = {};
-            datum[START_URL] = urlData;
-            const dataset = [datum];
+          const datum = {};
+          datum[START_URL] = urlData;
+          const dataset = [datum];
 
-            store(dataset, () => {
-              crawl(dataset, (total) => {
-                console.log(`crawled ${total.length} items`);
-                stop(nodes, () => {
-                  server.close();
-                });
-              });
+          store(dataset, () => {
+            crawl(dataset, (total) => {
+              for (const item of total) {
+                console.log(item);
+              }
+              server.close();
             });
           });
         });
-  });
+      });
 });
