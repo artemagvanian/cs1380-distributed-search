@@ -57,23 +57,25 @@ function computeTF(keys, cb) {
 
   const process = (i) => {
     if (i < keys.length) {
-      global.distribution.local.store.get({gid: 'search', key: keys[i]}, (_, v) => {
-        const words = toWordStream(v);
-        const nw = words.length;
+      global.distribution.local.store.get({gid: 'search', key: keys[i]}, (e, v) => {
+        if (e == null) {
+          const words = toWordStream(v);
+          const nw = words.length;
 
-        Object.entries(words.reduce((acc, elt) => {
-          if (elt in acc) {
-            acc[elt]++;
-          } else {
-            acc[elt] = 1;
-          }
-          return acc;
-        }, {})).forEach(([word, freq]) => {
-          if (!(word in tf)) {
-            tf[word] = {};
-          }
-          tf[word][keys[i]] = freq / nw;
-        });
+          Object.entries(words.reduce((acc, elt) => {
+            if (elt in acc) {
+              acc[elt]++;
+            } else {
+              acc[elt] = 1;
+            }
+            return acc;
+          }, {})).forEach(([word, freq]) => {
+            if (!(word in tf)) {
+              tf[word] = {};
+            }
+            tf[word][keys[i]] = freq / nw;
+          });
+        }
         process(i + 1);
       });
     } else {
@@ -106,21 +108,25 @@ function queryTF(key, cb) {
 
 function computeIDF(keys, cb) {
   const idf = {};
+  let n = 0;
 
   const process = (i) => {
     if (i < keys.length) {
-      global.distribution.local.store.get({gid: 'search', key: keys[i]}, (_, v) => {
-        const words = toWordStream(v);
-        for (const word of words) {
-          if (!(word in idf)) {
-            idf[word] = 0;
+      global.distribution.local.store.get({gid: 'search', key: keys[i]}, (e, v) => {
+        if (e == null) {
+          const words = toWordStream(v);
+          for (const word of words) {
+            if (!(word in idf)) {
+              idf[word] = 0;
+            }
+            idf[word]++;
           }
-          idf[word]++;
+          n++;
         }
         process(i + 1);
       });
     } else {
-      global.distribution.local.store.put(idf, {gid: 'search', key: 'idf'}, (e) => {
+      global.distribution.local.store.put([n, idf], {gid: 'search', key: 'idf'}, (e) => {
         if (e != null) {
           global.distribution.util.log(e, 'error');
         }
@@ -132,13 +138,13 @@ function computeIDF(keys, cb) {
 }
 
 function queryIDF(key, cb) {
-  global.distribution.local.store.get({gid: 'search', key: 'idf'}, (e, idf) => {
+  global.distribution.local.store.get({gid: 'search', key: 'idf'}, (e, [n, idf]) => {
     if (e != null) {
       global.distribution.util.log(e, 'error');
       cb(e);
     } else {
       if (key in idf) {
-        cb(null, idf[key]);
+        cb(null, [n, idf[key]]);
       } else {
         cb(null, 0);
       }

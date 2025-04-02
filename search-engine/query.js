@@ -27,14 +27,17 @@ distribution.node.start((server) => {
                   global.distribution.util.log(`${node}: ${e[node]}`, 'error');
                 }
               }
-              let nTerm = 0;
+              let nDocuments = 0;
+              let nOccurrences = 0;
               for (const node in idfs) {
-                nTerm += idfs[node];
+                const [documentsPerNode, occurrencesPerNode] = idfs[node];
+                nDocuments += documentsPerNode;
+                nOccurrences += occurrencesPerNode;
               }
               const results = {};
               for (const node in tfs) {
                 for (const url in tfs[node]) {
-                  results[url] = tfs[node][url] * Math.log10(n / nTerm);
+                  results[url] = tfs[node][url] * Math.log10(nDocuments / nOccurrences);
                 }
               }
               const toDisplay = Object.entries(results).sort((a, b) => b[1] - a[1]);
