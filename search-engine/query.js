@@ -11,39 +11,37 @@ distribution.node.start((server) => {
   distribution.local.groups
       .put(config, group, (e) => {
         utils.perror(e);
-        distribution.local.store.get({key: 'n', gid: 'search'}, (e, n) => {
-          utils.perror(e);
-          const r = {service: 'search', method: 'queryTF'};
-          distribution.search.comm.send([term], r, (e, tfs) => {
+
+        const r = {service: 'search', method: 'queryTF'};
+        distribution.search.comm.send([term], r, (e, tfs) => {
+          if (e != {}) {
+            for (const node in e) {
+              global.distribution.util.log(`${node}: ${e[node]}`, 'error');
+            }
+          }
+          const r = {service: 'search', method: 'queryIDF'};
+          distribution.search.comm.send([term], r, (e, idfs) => {
             if (e != {}) {
               for (const node in e) {
                 global.distribution.util.log(`${node}: ${e[node]}`, 'error');
               }
             }
-            const r = {service: 'search', method: 'queryIDF'};
-            distribution.search.comm.send([term], r, (e, idfs) => {
-              if (e != {}) {
-                for (const node in e) {
-                  global.distribution.util.log(`${node}: ${e[node]}`, 'error');
-                }
+            let nDocuments = 0;
+            let nOccurrences = 0;
+            for (const node in idfs) {
+              const [documentsPerNode, occurrencesPerNode] = idfs[node];
+              nDocuments += documentsPerNode;
+              nOccurrences += occurrencesPerNode;
+            }
+            const results = {};
+            for (const node in tfs) {
+              for (const url in tfs[node]) {
+                results[url] = tfs[node][url] * Math.log10(nDocuments / nOccurrences);
               }
-              let nDocuments = 0;
-              let nOccurrences = 0;
-              for (const node in idfs) {
-                const [documentsPerNode, occurrencesPerNode] = idfs[node];
-                nDocuments += documentsPerNode;
-                nOccurrences += occurrencesPerNode;
-              }
-              const results = {};
-              for (const node in tfs) {
-                for (const url in tfs[node]) {
-                  results[url] = tfs[node][url] * Math.log10(nDocuments / nOccurrences);
-                }
-              }
-              const toDisplay = Object.entries(results).sort((a, b) => b[1] - a[1]);
-              console.log(toDisplay);
-              server.close();
-            });
+            }
+            const toDisplay = Object.entries(results).sort((a, b) => b[1] - a[1]);
+            console.log(toDisplay);
+            server.close();
           });
         });
       });
