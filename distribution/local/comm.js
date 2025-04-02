@@ -7,6 +7,8 @@ const {Buffer} = require('buffer');
 const orDefault = require('../util/orDefault');
 const {serialize, deserialize} = require('../util/serialization');
 
+const MAX_RETRIES = 4;
+
 /**
  * @typedef {Object} Target
  * @property {string} service
@@ -18,9 +20,10 @@ const {serialize, deserialize} = require('../util/serialization');
  * @param {Array} message
  * @param {Target} remote
  * @param {Callback} [callback]
+ * @param {number} [retries]
  * @return {void}
  */
-function send(message, remote, callback) {
+function send(message, remote, callback, retries = 0) {
   message = orDefault.arrayOrDefault(message);
   callback = orDefault.callbackOrDefault(callback);
 
@@ -60,10 +63,14 @@ function send(message, remote, callback) {
   });
 
   req.on('error', (e) => {
-    global.distribution.util.log(e, 'error');
-    setTimeout(() => {
-      send(message, remote, callback); // Retry 100ms later.
-    }, 100);
+    if (retries < MAX_RETRIES) {
+      global.distribution.util.log(e, 'error');
+      setTimeout(() => {
+        send(message, remote, callback, retries + 1); // Exponential backoff.
+      }, 100 * Math.pow(2, retries));
+    } else {
+      callback(e);
+    }
   });
 
   req.write(data);
