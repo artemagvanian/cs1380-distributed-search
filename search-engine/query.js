@@ -11,7 +11,7 @@ distribution.node.start((server) => {
   distribution.local.groups
       .put(config, group, (e) => {
         utils.perror(e);
-        distribution.local.store.get({key: 'idf', gid: 'search'}, (e, idf) => {
+        distribution.local.store.get({key: 'n', gid: 'search'}, (e, n) => {
           utils.perror(e);
           const r = {service: 'search', method: 'queryTF'};
           distribution.search.comm.send([term], r, (e, tfs) => {
@@ -20,15 +20,27 @@ distribution.node.start((server) => {
                 global.distribution.util.log(`${node}: ${e[node]}`, 'error');
               }
             }
-            const results = {};
-            for (const node in tfs) {
-              for (const url in tfs[node]) {
-                results[url] = tfs[node][url] / idf[term];
+            const r = {service: 'search', method: 'queryIDF'};
+            distribution.search.comm.send([term], r, (e, idfs) => {
+              if (e != {}) {
+                for (const node in e) {
+                  global.distribution.util.log(`${node}: ${e[node]}`, 'error');
+                }
               }
-            }
-            const toDisplay = Object.entries(results).sort((a, b) => b[1] - a[1]);
-            console.log(toDisplay);
-            server.close();
+              let nTerm = 0;
+              for (const node in idfs) {
+                nTerm += idfs[node];
+              }
+              const results = {};
+              for (const node in tfs) {
+                for (const url in tfs[node]) {
+                  results[url] = tfs[node][url] * Math.log10(n / nTerm);
+                }
+              }
+              const toDisplay = Object.entries(results).sort((a, b) => b[1] - a[1]);
+              console.log(toDisplay);
+              server.close();
+            });
           });
         });
       });

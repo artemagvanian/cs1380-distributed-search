@@ -4,6 +4,10 @@ const https = require('https');
 const {convert} = require('html-to-text');
 const natural = require('natural');
 
+function toWordStream(html) {
+  return convert(html).replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().split(/\s+/).map((w) => natural.PorterStemmer.stem(w));
+}
+
 function findURLs(baseUrl, stringHtml) {
   if (baseUrl.endsWith('index.html')) {
     baseUrl = baseUrl.slice(0, baseUrl.length - 'index.html'.length);
@@ -48,17 +52,13 @@ function fetchURL(url, cb) {
   req.end();
 }
 
-function convertToText(html) {
-  return convert(html).replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().split(/\s+/).map((w) => natural.PorterStemmer.stem(w));
-}
-
 function computeTF(keys, cb) {
   const tf = {};
 
   const process = (i) => {
     if (i < keys.length) {
       global.distribution.local.store.get({gid: 'search', key: keys[i]}, (_, v) => {
-        const words = convertToText(v);
+        const words = toWordStream(v);
         const nw = words.length;
 
         Object.entries(words.reduce((acc, elt) => {
@@ -104,4 +104,46 @@ function queryTF(key, cb) {
   });
 }
 
-module.exports = {findURLs, fetchURL, convertToText, computeTF, queryTF};
+function computeIDF(keys, cb) {
+  const idf = {};
+
+  const process = (i) => {
+    if (i < keys.length) {
+      global.distribution.local.store.get({gid: 'search', key: keys[i]}, (_, v) => {
+        const words = toWordStream(v);
+        for (const word of words) {
+          if (!(word in idf)) {
+            idf[word] = 0;
+          }
+          idf[word]++;
+        }
+        process(i + 1);
+      });
+    } else {
+      global.distribution.local.store.put(idf, {gid: 'search', key: 'idf'}, (e) => {
+        if (e != null) {
+          global.distribution.util.log(e, 'error');
+        }
+        cb(null);
+      });
+    }
+  };
+  process(0);
+}
+
+function queryIDF(key, cb) {
+  global.distribution.local.store.get({gid: 'search', key: 'idf'}, (e, idf) => {
+    if (e != null) {
+      global.distribution.util.log(e, 'error');
+      cb(e);
+    } else {
+      if (key in idf) {
+        cb(null, idf[key]);
+      } else {
+        cb(null, 0);
+      }
+    }
+  });
+}
+
+module.exports = {findURLs, fetchURL, computeTF, queryTF, computeIDF, queryIDF};
