@@ -19,14 +19,24 @@ function findURLs(baseUrl, stringHtml, filterUrls) {
   const anchors = parsedHtml.window.document.querySelectorAll('a[href]');
   const urls = [];
   for (const anchor of anchors) {
-    urls.push(new URL(anchor.getAttribute('href'), baseUrl).toString());
+    try {
+      const url = new URL(anchor.getAttribute('href'), baseUrl).toString();
+      urls.push(url);
+    } catch (e) {
+      global.distribution.util.log(e, 'error');
+    }
   }
 
   return urls.filter((url) => filterUrls.reduce((acc, elt) => acc || url.startsWith(elt), false));
 }
 
 function fetchURL(url, cb) {
-  const parsedUrl = new URL(url);
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(url);
+  } catch (e) {
+    return cb(e);
+  }
 
   const options = {
     hostname: parsedUrl.hostname,
