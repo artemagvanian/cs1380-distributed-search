@@ -1,5 +1,6 @@
 const distribution = require('../config.js');
 const utils = require('./utils.js');
+const nodeConfig = require('./node_config.json');
 
 const BASE_PORT = 7110;
 const START_URL = process.argv[2];
@@ -73,7 +74,7 @@ function crawl(dataset, cb) {
 
 distribution.node.start((server) => {
   const config = {gid: 'search'};
-  const group = utils.mkGroup(3, BASE_PORT);
+  const group = utils.mkGroupFromConfig(nodeConfig);
   distribution.local.groups
       .put(config, group, (e) => {
         utils.perror(e);

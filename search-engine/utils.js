@@ -22,6 +22,18 @@ function mkGroup(n, basePort) {
   return group;
 }
 
+function mkGroupFromConfig(config) {
+  const nodes = config.nodes;
+  const group = {};
+
+  nodes.forEach((node) => {
+    const id = global.distribution.util.id.getSID(node);
+    group[id] = node;
+  });
+
+  return group;
+}
+
 function mkNodes(n, basePort) {
   const nodes = [];
   for (let i = 0; i < n; i++) {
@@ -54,4 +66,4 @@ function stop(nodes, cb) {
   }
 }
 
-module.exports = {getKeys, mkGroup, mkNodes, spawn, stop, perror};
+module.exports = {getKeys, mkGroup, mkGroupFromConfig, mkNodes, spawn, stop, perror};

@@ -1,13 +1,14 @@
 const distribution = require('../config.js');
 const utils = require('./utils.js');
 const natural = require('natural');
+const nodeConfig = require('./node_config.json');
 
-const BASE_PORT = 7110;
+// const BASE_PORT = 7110;
 
 distribution.node.start((server) => {
   const term = natural.PorterStemmer.stem(process.argv[2].replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase());
   const config = {gid: 'search'};
-  const group = utils.mkGroup(3, BASE_PORT);
+  const group = utils.mkGroupFromConfig(nodeConfig);
   distribution.local.groups
       .put(config, group, (e) => {
         utils.perror(e);
