@@ -3,11 +3,10 @@ const utils = require('./utils.js');
 
 const BASE_PORT = 7110;
 const START_URL = process.argv[2];
+const FILTER_URLS = process.argv[3];
 
-// https://cs.brown.edu/courses/csci1380/sandbox/3
-
-function map(key, value, cb) {
-  const urls = global.distribution.local.search.findURLs(key, value);
+function mapStencil(key, value, cb) {
+  const urls = global.distribution.local.search.findURLs(key, value, FILTER_URLS);
   const os = urls.map((url) => {
     const o = {};
     o[url] = '';
@@ -53,17 +52,21 @@ function store(dataset, cb, idx = 0) {
   });
 }
 
-function crawl(dataset, cb, total = []) {
-  if (total.length == 0) {
-    total = utils.getKeys(dataset);
+function crawl(dataset, cb) {
+  const urls = utils.getKeys(dataset);
+  for (const item of urls) {
+    console.log(item);
   }
-  distribution.search.mr.exec({keys: dataset.map((o) => Object.keys(o)[0]), map, reduce}, (e, v) => {
+
+  const serializedMap = global.distribution.util.serialize(mapStencil).replace('FILTER_URLS', FILTER_URLS);
+  const map = global.distribution.util.deserialize(serializedMap);
+
+  distribution.search.mr.exec({keys: urls, map, reduce}, (e, v) => {
     utils.perror(e);
     if (Object.keys(v).length != 0) {
-      total.push(...utils.getKeys(v));
-      crawl(v, cb, total);
+      crawl(v, cb);
     } else {
-      cb(total);
+      cb();
     }
   });
 };
@@ -82,10 +85,7 @@ distribution.node.start((server) => {
           const dataset = [datum];
 
           store(dataset, () => {
-            crawl(dataset, (total) => {
-              for (const item of total) {
-                console.log(item);
-              }
+            crawl(dataset, () => {
               server.close();
             });
           });

@@ -8,7 +8,7 @@ function toWordStream(html) {
   return convert(html).replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().split(/\s+/).map((w) => natural.PorterStemmer.stem(w));
 }
 
-function findURLs(baseUrl, stringHtml) {
+function findURLs(baseUrl, stringHtml, filterUrls) {
   if (baseUrl.endsWith('index.html')) {
     baseUrl = baseUrl.slice(0, baseUrl.length - 'index.html'.length);
   } else {
@@ -22,7 +22,7 @@ function findURLs(baseUrl, stringHtml) {
     urls.push(new URL(anchor.getAttribute('href'), baseUrl).toString());
   }
 
-  return urls;
+  return urls.filter((url) => filterUrls.reduce((acc, elt) => acc || url.startsWith(elt), false));
 }
 
 function fetchURL(url, cb) {
