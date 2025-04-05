@@ -22,10 +22,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "yargs": "^17.7.2",
     "@brown-ds/distribution": "latest",
+    "cheerio": "^1.0.0",
     "html-to-text": "^9.0.5",
     "jsdom": "^23.2.0",
-    "natural": "^6.10.4"
+    "natural": "^6.10.4",
+    "normalize-url": "^6.1.0",
+    "yargs": "^17.7.2"
   }
 }

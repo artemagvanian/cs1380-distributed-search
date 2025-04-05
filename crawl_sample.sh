@@ -1,1 +1,1 @@
-./search-engine/run_crawl.sh https://en.wikibooks.org/wiki/Cookbook:Table_of_Contents "['https://en.wikibooks.org/wiki/Cookbook','https://en.wikibooks.org/wiki/Category']"
+./search-engine/run_crawl.sh https://en.wikibooks.org/wiki/Cookbook:Table_of_Contents "['https://en.wikibooks.org/wiki/Cookbook:','https://en.wikibooks.org/wiki/Category:']"

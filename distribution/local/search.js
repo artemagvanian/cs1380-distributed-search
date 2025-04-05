@@ -1,73 +1,54 @@
-const {JSDOM} = require('jsdom');
+const cheerio = require('cheerio');
 const {URL} = require('url');
-const https = require('https');
 const {convert} = require('html-to-text');
 const natural = require('natural');
+const normalizeUrl = require('normalize-url');
 
 function toWordStream(html) {
   return convert(html).replace(/[^a-zA-Z0-9\s]/g, '').toLowerCase().split(/\s+/).map((w) => natural.PorterStemmer.stem(w));
 }
 
 function findURLs(baseUrl, stringHtml, filterUrls) {
-  if (baseUrl.endsWith('index.html')) {
-    baseUrl = baseUrl.slice(0, baseUrl.length - 'index.html'.length);
-  } else {
-    baseUrl += '/';
-  }
+  const $ = cheerio.load(stringHtml);
+  const anchors = $('a');
 
-  const parsedHtml = new JSDOM(stringHtml);
-  const anchors = parsedHtml.window.document.querySelectorAll('a[href]');
   const urls = [];
   for (const anchor of anchors) {
     try {
-      const url = new URL(anchor.getAttribute('href'), baseUrl).toString();
-      urls.push(url);
+      const url = normalizeUrl(new URL($(anchor).attr('href'), baseUrl).toString(), {
+        forceHttps: true,
+        stripHash: true,
+        removeDirectoryIndex: true,
+      });
+      if (filterUrls.reduce((acc, elt) => acc || url.startsWith(elt), false)) {
+        urls.push(url);
+      }
     } catch (e) {
       global.distribution.util.log(e, 'error');
     }
   }
 
-  return urls.filter((url) => filterUrls.reduce((acc, elt) => acc || url.startsWith(elt), false));
+  return urls;
 }
 
 function fetchURL(url, cb) {
-  let parsedUrl;
-  try {
-    parsedUrl = new URL(url);
-  } catch (e) {
-    return cb(e);
-  }
-
-  const options = {
-    hostname: parsedUrl.hostname,
-    path: parsedUrl.pathname,
-  };
-
-  const req = https.get(options, (res) => {
-    let data = '';
-
-    res.on('data', (chunk) => {
-      data += chunk;
-    });
-
-    res.on('end', () => {
-      cb(null, data);
-    });
-  });
-
-  req.on('error', (error) => {
-    cb(error);
-  });
-
-  req.end();
+  fetch(url).then((res) => {
+    return res.text();
+  }, (e) => cb(e)).then((data) => {
+    cb(null, data);
+  }, (e) => cb(e));
 }
 
 function computeTF(keys, cb) {
   const tf = {};
 
-  const process = (i) => {
-    if (i < keys.length) {
-      global.distribution.local.store.get({gid: 'search', key: keys[i]}, (e, v) => {
+  let processed = 0;
+  const DISPLAY_RATE = 1000;
+  const promises = [];
+
+  for (const key of keys) {
+    promises.push(new Promise((resolve) => {
+      global.distribution.local.store.get({gid: 'search', key}, (e, v) => {
         if (e == null) {
           const words = toWordStream(v);
           const nw = words.length;
@@ -83,22 +64,26 @@ function computeTF(keys, cb) {
             if (!(word in tf)) {
               tf[word] = {};
             }
-            tf[word][keys[i]] = freq / nw;
+            tf[word][key] = freq / nw;
           });
         }
-        process(i + 1);
-      });
-    } else {
-      global.distribution.local.store.put(tf, {gid: 'search', key: 'tf'}, (e) => {
-        if (e != null) {
-          global.distribution.util.log(e, 'error');
+        processed++;
+        if (processed % DISPLAY_RATE == 0 || processed == keys.length) {
+          global.distribution.util.log(`tf: processed ${processed} out of ${keys.length} documents`);
         }
-        cb(null);
+        resolve();
       });
-    }
-  };
+    }));
+  }
 
-  process(0);
+  Promise.allSettled(promises).then(() => {
+    global.distribution.local.store.put(tf, {gid: 'search', key: 'tf'}, (e) => {
+      if (e != null) {
+        global.distribution.util.log(e, 'error');
+      }
+      cb(null);
+    });
+  });
 }
 
 function queryTF(key, cb) {
@@ -120,9 +105,13 @@ function computeIDF(keys, cb) {
   const idf = {};
   let n = 0;
 
-  const process = (i) => {
-    if (i < keys.length) {
-      global.distribution.local.store.get({gid: 'search', key: keys[i]}, (e, v) => {
+  let processed = 0;
+  const DISPLAY_RATE = 1000;
+  const promises = [];
+
+  for (const key of keys) {
+    promises.push(new Promise((resolve) => {
+      global.distribution.local.store.get({gid: 'search', key}, (e, v) => {
         if (e == null) {
           const words = toWordStream(v);
           for (const word of words) {
@@ -133,18 +122,23 @@ function computeIDF(keys, cb) {
           }
           n++;
         }
-        process(i + 1);
-      });
-    } else {
-      global.distribution.local.store.put([n, idf], {gid: 'search', key: 'idf'}, (e) => {
-        if (e != null) {
-          global.distribution.util.log(e, 'error');
+        processed++;
+        if (processed % DISPLAY_RATE == 0 || processed == keys.length) {
+          global.distribution.util.log(`idf: processed ${processed} out of ${keys.length} documents`);
         }
-        cb(null);
+        resolve();
       });
-    }
-  };
-  process(0);
+    }));
+  }
+
+  Promise.allSettled(promises).then(() => {
+    global.distribution.local.store.put([n, idf], {gid: 'search', key: 'idf'}, (e) => {
+      if (e != null) {
+        global.distribution.util.log(e, 'error');
+      }
+      cb(null);
+    });
+  });
 }
 
 function queryIDF(key, cb) {

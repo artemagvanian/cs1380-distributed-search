@@ -33,10 +33,10 @@ function comm(config) {
         const values = {};
         const errors = {};
 
-        const processUntilDone = (i) => {
-          if (i == nodeIds.length) {
-            callback(errors, values);
-          } else {
+        const promises = [];
+
+        for (let i = 0; i < nodeIds.length; i++) {
+          promises.push(new Promise((resolve) => {
             const nodeId = nodeIds[i];
             const node = groups[nodeId];
             global.distribution.local.comm.send(message, {...configuration, node}, (e, v) => {
@@ -45,11 +45,14 @@ function comm(config) {
               } else {
                 values[nodeId] = v;
               }
-              processUntilDone(i + 1);
+              resolve();
             });
-          }
-        };
-        processUntilDone(0);
+          }));
+        }
+
+        Promise.allSettled(promises).then(() => {
+          callback(errors, values);
+        });
       }
     });
   }

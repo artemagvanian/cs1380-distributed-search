@@ -2,5 +2,6 @@
 
 DIRNAME=`dirname -- "$0"`
 SCRIPT_PATH="$DIRNAME/../distribution.js"
+INSPECT_PORT="1$1"
 
-NODE_TLS_REJECT_UNAUTHORIZED=0 node --stack-size=8192 --max-old-space-size=16384 $SCRIPT_PATH --ip '127.0.0.1' --port $1
+node --inspect=$INSPECT_PORT $SCRIPT_PATH --ip '127.0.0.1' --port $1

@@ -62,30 +62,28 @@ function mr(config) {
         const serviceName = config.serviceName;
         const gid = config.gid;
 
-        const processed = [];
+        const requests = [];
 
-        const process = (i) => {
-          if (i < keys.length) {
+        for (let i = 0; i < keys.length; i++) {
+          requests.push(new Promise((resolve, reject) => {
             global.distribution.local.store.get({key: keys[i], gid}, (e, v) => {
               if (e == null) {
                 try {
                   func(keys[i], v, (r) => {
-                    processed.push(...r);
-                    process(i + 1);
+                    resolve(r);
                   });
                 } catch (e) {
-                  global.distribution.util.log(e, 'error');
+                  reject(new Error('map failed'));
                 }
               } else {
-                process(i + 1);
+                reject(new Error('file not found'));
               }
             });
-          } else {
-            store(0);
-          }
-        };
+          }));
+        }
 
-        const store = () => {
+        Promise.allSettled(requests).then((result) => {
+          const processed = result.flatMap((r) => r.status == 'fulfilled' ? r.value : []);
           global.distribution.local.store.put(processed, {key: serviceName + 'mapped', gid}, (e) => {
             if (e != null) {
               global.distribution.util.log(e, 'error');
@@ -103,20 +101,22 @@ function mr(config) {
               global.distribution.util.log(`worker done mapping; mapped ${processed.length} items`);
             });
           });
-        };
-
-        process(0);
+        });
       } else if (message == 'shuffle') {
         const nodes = config.nodes;
         const coordinator = config.coordinator;
         const serviceName = config.serviceName;
         const gid = config.gid;
 
-        global.distribution.local.store.get({key: serviceName + 'mapped', gid}, (e, mapped) => {
-          if (e != null) {
-            global.distribution.util.log(e, 'error');
-          }
-
+        new Promise((resolve, reject) => {
+          global.distribution.local.store.get({key: serviceName + 'mapped', gid}, (e, mapped) => {
+            if (e != null) {
+              reject(e);
+            } else {
+              resolve(mapped);
+            }
+          });
+        }).then((mapped) => {
           const entryToNode = new Map();
           for (const entry of mapped) {
             const [key, value] = Object.entries(entry)[0];
@@ -131,45 +131,46 @@ function mr(config) {
               entryToNode.set(node, [[key, value]]);
             }
           }
-          const entryToNodeEntries = [...entryToNode.entries()];
-          const send = (i) => {
-            if (i < entryToNodeEntries.length) {
-              const [node, entries] = entryToNodeEntries[i];
-              const message = [{entries, serviceName, gid, message: 'receive'}];
-              const remote = {node, service: serviceName, method: 'worker'};
+          return Promise.resolve([...entryToNode.entries()]);
+        }).then((entryToNodeEntries) => {
+          const requests = [];
+          for (let i = 0; i < entryToNodeEntries.length; i++) {
+            const [node, entries] = entryToNodeEntries[i];
+            const message = [{entries, serviceName, gid, message: 'receive'}];
+            const remote = {node, service: serviceName, method: 'worker'};
+            requests.push(new Promise((resolve) => {
               global.distribution.local.comm.send(message, remote, (e) => {
                 if (e != null) {
                   global.distribution.util.log(e, 'error');
                 }
-                send(i + 1);
+                resolve();
               });
-            } else {
-              global.distribution.local.store.del({key: serviceName + 'mapped', gid}, (e) => {
-                if (e != null) {
-                  global.distribution.util.log(e, 'error');
-                }
-                const r = {node: coordinator, service: serviceName, method: 'coordinator'};
-                global.distribution.local.comm.send([
-                  {
-                    message: 'doneShuffling',
-                    node: global.nodeConfig,
-                    serviceName: config.serviceName,
-                  }], r, (e) => {
-                  if (e != null) {
-                    global.distribution.util.log(e, 'error');
-                  }
-                  global.distribution.util.log(`worker done shuffling; shuffled ${mapped.length} items`);
-                });
-              });
+            }));
+          }
+          return Promise.all(requests);
+        }).then(() => {
+          global.distribution.local.store.del({key: serviceName + 'mapped', gid}, (e) => {
+            if (e != null) {
+              global.distribution.util.log(e, 'error');
             }
-          };
-          send(0);
+            const r = {node: coordinator, service: serviceName, method: 'coordinator'};
+            global.distribution.local.comm.send([
+              {
+                message: 'doneShuffling',
+                node: global.nodeConfig,
+                serviceName: config.serviceName,
+              }], r, (e) => {
+              if (e != null) {
+                global.distribution.util.log(e, 'error');
+              }
+              global.distribution.util.log(`worker done shuffling`);
+            });
+          });
         });
       } else if (message == 'receive') {
         const entries = config.entries;
         const serviceName = config.serviceName;
         const gid = config.gid;
-
 
         global.distribution.local.store.get({key: serviceName + 'received', gid}, (e, r) => {
           if (e != null) {
@@ -196,38 +197,44 @@ function mr(config) {
 
         let processed = {};
 
-        global.distribution.local.store.get({key: serviceName + 'received', gid}, (e, v) => {
-          const received = v || {};
-          const process = (i) => {
-            if (i < Object.keys(received).length) {
-              const [key, value] = Object.entries(received)[i];
+        new Promise((resolve) => {
+          global.distribution.local.store.get({key: serviceName + 'received', gid}, (e, v) => {
+            const received = v || {};
+            resolve(Object.entries(received));
+          });
+        }).then((received) => {
+          const requests = [];
+          for (let i = 0; i < received.length; i++) {
+            requests.push(new Promise((resolve) => {
+              const [key, value] = received[i];
               try {
                 func(key, value, (r) => {
                   processed = Object.assign(processed, r);
-                  process(i + 1);
+                  resolve();
                 });
               } catch (e) {
                 global.distribution.util.log(e, 'error');
+                resolve();
               }
-            } else {
-              global.distribution.local.store.del({key: serviceName + 'received', gid}, () => {
-                const r = {node: coordinator, service: serviceName, method: 'coordinator'};
-                global.distribution.local.comm.send([
-                  {
-                    message: 'doneReducing',
-                    node: global.nodeConfig,
-                    serviceName: config.serviceName,
-                    result: processed,
-                  }], r, (e) => {
-                  if (e != null) {
-                    global.distribution.util.log(e, 'error');
-                  }
-                  global.distribution.util.log(`worker done reducing; reduced ${Object.keys(received).length} items`);
-                });
-              });
-            }
-          };
-          process(0);
+            }));
+          }
+          return Promise.allSettled(requests);
+        }).then(() => {
+          global.distribution.local.store.del({key: serviceName + 'received', gid}, () => {
+            const r = {node: coordinator, service: serviceName, method: 'coordinator'};
+            global.distribution.local.comm.send([
+              {
+                message: 'doneReducing',
+                node: global.nodeConfig,
+                serviceName: config.serviceName,
+                result: processed,
+              }], r, (e) => {
+              if (e != null) {
+                global.distribution.util.log(e, 'error');
+              }
+              global.distribution.util.log(`worker done reducing; reduced ${Object.keys(processed).length} items`);
+            });
+          });
         });
       }
     };

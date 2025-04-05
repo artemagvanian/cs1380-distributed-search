@@ -6,31 +6,37 @@ const BASE_PORT = 7110;
 const START_URL = process.argv[2];
 const FILTER_URLS = process.argv[3];
 
-function mapStencil(key, value, cb) {
-  const urls = global.distribution.local.search.findURLs(key, value, FILTER_URLS);
-  const os = urls.map((url) => {
-    const o = {};
-    o[url] = '';
-    return o;
-  });
-  cb(os);
-};
+function makeMap() {
+  function mapStencil(key, value, cb) {
+    const urls = global.distribution.local.search.findURLs(key, value, FILTER_URLS);
+    const os = urls.map((url) => {
+      const o = {};
+      o[url] = '';
+      return o;
+    });
+    cb(os);
+  };
+
+  const serializedMap = global.distribution.util.serialize(mapStencil).replace('FILTER_URLS', FILTER_URLS);
+  return global.distribution.util.deserialize(serializedMap);
+}
+
 
 function reduce(key, _, cb) {
-  function perror(e) {
-    if (e != null) {
-      global.distribution.util.log(e, 'error');
-    }
-  }
   global.distribution.local.store.get({gid: 'search', key}, (e) => {
     if (e != null) {
       global.distribution.local.search.fetchURL(key, (e, v) => {
-        perror(e);
+        if (e != null) {
+          v = '';
+        }
         global.distribution.local.store.put(v, {gid: 'search', key}, (e) => {
-          perror(e);
-          const o = {};
-          o[key] = '';
-          cb(o);
+          if (e == null) {
+            const o = {};
+            o[key] = '';
+            cb(o);
+          } else {
+            cb({});
+          }
         });
       });
     } else {
@@ -59,10 +65,7 @@ function crawl(dataset, cb) {
     console.log(item);
   }
 
-  const serializedMap = global.distribution.util.serialize(mapStencil).replace('FILTER_URLS', FILTER_URLS);
-  const map = global.distribution.util.deserialize(serializedMap);
-
-  distribution.search.mr.exec({keys: urls, map, reduce}, (e, v) => {
+  distribution.search.mr.exec({keys: urls, map: makeMap(), reduce}, (e, v) => {
     utils.perror(e);
     if (Object.keys(v).length != 0) {
       crawl(v, cb);

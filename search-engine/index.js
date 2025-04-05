@@ -21,6 +21,7 @@ rl.on('close', () => {
     distribution.local.groups
         .put(config, group, (e) => {
           utils.perror(e);
+          global.distribution.util.log('computing tf');
           const r = {service: 'search', method: 'computeTF'};
           distribution.search.comm.send([urls], r, (e) => {
             if (e != {}) {
@@ -28,6 +29,7 @@ rl.on('close', () => {
                 global.distribution.util.log(`${node}: ${e[node]}`, 'error');
               }
             }
+            global.distribution.util.log('computing idf');
             const r = {service: 'search', method: 'computeIDF'};
             distribution.search.comm.send([urls], r, (e) => {
               if (e != {}) {
