@@ -1,3 +1,8 @@
+global.nodeConfig = {
+  ip: '10.128.0.3',
+  port: 8080,
+};
+
 const readline = require('readline');
 const distribution = require('../config.js');
 const utils = require('./utils.js');
