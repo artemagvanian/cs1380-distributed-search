@@ -122,7 +122,7 @@ function mr(config) {
             const [key, value] = Object.entries(entry)[0];
             const kid = global.distribution.util.id.getID(key);
             const nids = Object.values(nodes).map((node) => global.distribution.util.id.getNID(node));
-            const node = nodes[global.distribution.util.id.consistentHash(kid, nids).substring(0, 5)];
+            const node = nodes[global.distribution.util.id.rendezvousHash(kid, nids).substring(0, 5)];
             if (entryToNode.has(node)) {
               const entries = entryToNode.get(node);
               entries.push([key, value]);
