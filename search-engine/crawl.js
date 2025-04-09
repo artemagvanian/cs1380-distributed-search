@@ -7,7 +7,6 @@ const distribution = require('../config.js');
 const utils = require('./utils.js');
 const nodeConfig = require('./node_config.json');
 
-const BASE_PORT = 7110;
 const START_URL = process.argv[2];
 const FILTER_URLS = process.argv[3];
 
@@ -32,17 +31,18 @@ function reduce(key, _, cb) {
     if (e != null) {
       global.distribution.local.search.fetchURL(key, (e, v) => {
         if (e != null) {
-          v = '';
+          cb({});
+        } else {
+          global.distribution.local.store.put(v, {gid: 'search', key}, (e) => {
+            if (e == null) {
+              const o = {};
+              o[key] = '';
+              cb(o);
+            } else {
+              cb({});
+            }
+          });
         }
-        global.distribution.local.store.put(v, {gid: 'search', key}, (e) => {
-          if (e == null) {
-            const o = {};
-            o[key] = '';
-            cb(o);
-          } else {
-            cb({});
-          }
-        });
       });
     } else {
       cb({});
