@@ -32,11 +32,27 @@ function findURLs(baseUrl, stringHtml, filterUrls) {
 }
 
 function fetchURL(url, cb) {
-  fetch(url).then((res) => {
-    return res.text();
-  }, (e) => cb(e)).then((data) => {
-    cb(null, data);
-  }, (e) => cb(e));
+  const MAX_RETRIES = 3;
+  const fetchWithRetries = (retries = 0) => {
+    fetch(url).then((res) => {
+      return res.text();
+    }, (e) => {
+      if (retries < MAX_RETRIES) {
+        setTimeout(() => fetchWithRetries(retries + 1), 100 * Math.pow(2, retries));
+      } else {
+        cb(e);
+      }
+    }).then((data) => {
+      cb(null, data);
+    }, (e) => {
+      if (retries < MAX_RETRIES) {
+        setTimeout(() => fetchWithRetries(retries + 1), 100 * Math.pow(2, retries));
+      } else {
+        cb(e);
+      }
+    });
+  };
+  fetchWithRetries();
 }
 
 function computeTF(keys, cb) {
