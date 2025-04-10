@@ -23,11 +23,13 @@
   "license": "ISC",
   "dependencies": {
     "@brown-ds/distribution": "latest",
+    "axios": "^1.8.4",
     "cheerio": "^1.0.0",
     "html-to-text": "^9.0.5",
     "jsdom": "^23.2.0",
     "natural": "^6.10.4",
     "normalize-url": "^6.1.0",
+    "open": "^10.1.0",
     "yargs": "^17.7.2"
   }
 }
