@@ -193,3 +193,27 @@ My implementation comprises `1` new software component, totaling `240` added lin
 > Which extra features did you implement and how?
 
 None.
+
+# M6: Cloud Deployment
+
+## Summarize the process of writing the paper and preparing the poster, including any surprises you encountered.
+
+Developing the poster went as expected.
+
+Project-wise, most of the challenges arose from having to debug JS-specific failures. While the conceptual side of the project went quite good, the deployment was jarring, as we had to debug a variety of issues starting from running OOM and ending with not being able to trace the execution due to passing functions as values.
+
+## Roughly, how many hours did M6 take you to complete?
+
+Hours: 20
+
+## How many LoC did the distributed version of the project end up taking?
+
+DLoC: 1.7k.
+
+## How does this number compare with your non-distributed version?
+
+LoC: 5k.
+
+## How different are these numbers for different members in the team and why?
+
+The numbers were roughly the same for us.
